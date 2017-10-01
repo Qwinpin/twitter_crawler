@@ -12,7 +12,7 @@ Requirements:
  - PyQuery (used to parse web-page)
  - Tweepy - https://github.com/tweepy/tweepy
 
-Used GetOldTweets-python by Jefferson-Henrique (https://github.com/Jefferson-Henrique/GetOldTweets-python) - realy thx, u greate man
+Used GetOldTweets-python by Jefferson-Henrique (https://github.com/Jefferson-Henrique/GetOldTweets-python) - realy thx, u great man
 
 In future:
  - interface to interact with different type of modules
