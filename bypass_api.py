@@ -1,6 +1,7 @@
 import urllib, urllib2, json, re, datetime, sys, cookielib
 from pyquery import PyQuery
 import csv
+import requests
 
 class Tweet:
     def __init__(self):
@@ -76,6 +77,7 @@ def getTweets(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
 
     active = True
     while active:
+        print('Still alive')
         try:
             json = getJsonReponse(parameters, refreshCursor, cookieJar, proxy)
         except:
@@ -108,7 +110,7 @@ def getTweets(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
             tweet.id_str = id
             #tweet.permalink = 'https://twitter.com' + permalink
             tweet.screenname = usernameTweet
-            tweet.text = txt
+            tweet.text = txt.encode('utf-8')
             tweet.created_at = datetime.datetime.fromtimestamp(dateSec)
             #tweet.retweets = retweets
             #tweet.favorites = favorites
@@ -130,13 +132,6 @@ def getTweets(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
     
     if receiveBuffer and len(resultsAux) > 0:
         receiveBuffer(resultsAux)
-    
-    out = [[tweet.id_str, tweet.created_at, tweet.text] for tweet in results]
-
-    with open('%s_tweets.csv' % name, 'wb') as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerow(['id', 'created_at', 'text'])
-        writer.writerows(out)
 
     return results
 

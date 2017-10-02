@@ -37,13 +37,6 @@ def get_tweets_3200(api, parameters):
         all_tweets.extend(new_tw)
 
         last_id = all_tweets[-1].id - 1
-    #prepare list to save in .csv
-    out = [[tweet.id_str, tweet.created_at, tweet.text.encode('utf-8')] for tweet in all_tweets]
-    
-    with open('%s_tweets.csv' % name, 'wb') as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerow(['id', 'created_at', 'text'])
-        writer.writerows(out)
 
     return all_tweets, 0
 
@@ -76,15 +69,6 @@ def get_followers(api, parameters):
 
         foll_names.extend([us._json['screen_name'] for us in users_prepare])
 
-    #please, someone, delete my stupid comments
-    #prepare u... data
-    out = map(None, ids, foll_names)
-
-    with open('%s_followers.csv' % name, 'wb') as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerow(['id', 'names'])
-        writer.writerows(out)
-
     return ids, 0
 
 def get_following(api, parameters):
@@ -111,13 +95,6 @@ def get_following(api, parameters):
             return ids, err
 
         friend_names.extend([us._json['screen_name'] for us in users_prepare])
-
-    out = map(None, ids, friend_names)
-
-    with open('%s_following.csv' % name, 'wb') as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerow(['id', 'names'])
-        writer.writerows(out)
 
     return ids, 0
 

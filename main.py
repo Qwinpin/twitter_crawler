@@ -1,8 +1,8 @@
 from parameters import Parameters
 import off_api as oa
 import bypass_api as ba
-api = oa.login()
-para = Parameters().setUsername('big_ben_clock').setSince('2017-05-01').setUntil('2017-05-12').setMaxTweets(10000)
+#api = oa.login()
+para = Parameters().setUsername('blessmepadre').setSince('2017-09-01').setUntil('2017-09-03').setMaxTweets(30000)
 #ba.get_tweets_by_data(para)
 #a, b = oa.get_followers(api, para)
 #print(b)
