@@ -1,4 +1,4 @@
-import urllib, urllib2, json, re, datetime, sys, cookielib
+import json, re, datetime, sys
 from pyquery import PyQuery
 import csv
 import requests
@@ -6,94 +6,42 @@ import requests
 class Tweet:
     def __init__(self):
         pass
-
+#send request to twitter, get json-data
 def getJsonReponse(parameters, refreshCursor, cookieJar, proxy):
-    url = "https://twitter.com/i/search/timeline?f=tweets&q=%s&src=typd&max_position=%s"
-        
-    urlGetData = ''
-        
-    if hasattr(parameters, 'username'):
-        urlGetData += ' from:' + parameters.username
-        
-    if hasattr(parameters, 'querySearch'):
-        urlGetData += ' ' + parameters.querySearch
-        
-    if hasattr(parameters, 'near'):
-        urlGetData += "&near:" + parameters.near + " within:" + parameters.within
-        
-    if hasattr(parameters, 'since'):
-        urlGetData += ' since:' + parameters.since
-            
-    if hasattr(parameters, 'until'):
-        urlGetData += ' until:' + parameters.until
-        
-
-    if hasattr(parameters, 'topTweets'):
-        if parameters.topTweets:
-            url = "https://twitter.com/i/search/timeline?q=%s&src=typd&max_position=%s"
-        
-        
-        
-    url = url % (urllib.quote(urlGetData), refreshCursor)
-
-    headers = [
-        ('Host', "twitter.com"),
-        ('User-Agent', "Mozilla/5.0 (Windows NT 6.1; Win64; x64)"),
-        ('Accept', "application/json, text/javascript, */*; q=0.01"),
-        ('Accept-Language', "de,en-US;q=0.7,en;q=0.3"),
-        ('X-Requested-With', "XMLHttpRequest"),
-        ('Referer', url),
-        ('Connection', "keep-alive")
-    ]
-
-    if proxy:
-        opener = urllib2.build_opener(urllib2.ProxyHandler({'http': proxy, 'https': proxy}), urllib2.HTTPCookieProcessor(cookieJar))
-    else:
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
-    opener.addheaders = headers
-
+    
     try:
-        response = opener.open(url)
-        jsonResponse = response.read()
+        response = requests.get((parameters['url'] + refreshCursor), cookies = cookieJar, headers = parameters['headers'])
+        jsonResponse = response.json()
     except:
-        print("Twitter weird response. Try to see on browser: https://twitter.com/search?q=%s&src=typd", urllib.quote(urlGetData))
+        print("Twitter weird response. Try to see on browser: ", response.url)
         sys.exit()
-        return
-        
-    dataJson = json.loads(jsonResponse)
-    
-    return dataJson
 
-def getTweets(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
+    return jsonResponse
+
+#parse json data, refresh 'page' to download new tweets
+def parse(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
     refreshCursor = ''
-    
     results = []
     resultsAux = []
-    cookieJar = cookielib.CookieJar()
-    
-    name = parameters.username
-    if hasattr(parameters, 'username') and (parameters.username.startswith("\'") or parameters.username.startswith("\"")) and (parameters.username.endswith("\'") or parameters.username.endswith("\"")):
-        parameters.username = parameters.username[1:-1]
+    cookieJar = requests.cookies.RequestsCookieJar()
 
     active = True
     while active:
-        print('Still alive')
         try:
             json = getJsonReponse(parameters, refreshCursor, cookieJar, proxy)
         except:
-            return results
+            return [], 'err_request'
         if len(json['items_html'].strip()) == 0:
             break
-        refreshCursor = json['min_position']            
+        refreshCursor = json['min_position']
         tweets = PyQuery(json['items_html'])('div.js-stream-tweet')
         
         if len(tweets) == 0:
             break
-        
+        #parse and add to object to return
         for tweetHTML in tweets:
             tweetPQ = PyQuery(tweetHTML)
             tweet = Tweet()
-                
             usernameTweet = tweetPQ("span:first.username.u-dir b").text()
             txt = re.sub(r"\s+", " ", tweetPQ("p.js-tweet-text").text().replace('# ', '#').replace('@ ', '@'))
             #retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
@@ -124,17 +72,17 @@ def getTweets(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
             if receiveBuffer and len(resultsAux) >= bufferLength:
                 receiveBuffer(resultsAux)
                 resultsAux = []
-            
-            if parameters.maxTweets > 0 and len(results) >= parameters.maxTweets:
+            #if we set limit for number of tweets
+            if parameters['maxTweets'] > 0 and len(results) >= parameters['maxTweets']:
                 active = False
                 break
-                
-    
+
     if receiveBuffer and len(resultsAux) > 0:
         receiveBuffer(resultsAux)
 
-    return results
+    return results, 0
 
+#for future, return sets of date-range, like [(2016-12-12, 2016-12-24), (2016-12-24, 2016-12-31)]
 def date_prepare(parameters):
 
     start = parameters.since
@@ -143,5 +91,29 @@ def date_prepare(parameters):
     end = datetime.datetime.strptime(end, '%Y-%m-%d')
 
     days_between = (end - start).days
-    date_list = [[str(end - datetime.timedelta(days=x))[:10], str(end - datetime.timedelta(days=(x + 1)))[:10]] for x in range(days_between)]
+    date_list = [(str(end - datetime.timedelta(days=x))[:10], str(end - datetime.timedelta(days=(x + 1)))[:10]) for x in range(days_between)]
     print(date_list)
+
+#prepare url, headers, numbers of tweets, create dict, call parse function
+def get_tweets(parameters):
+    #if element is None just dont use it
+    url = 'https://twitter.com/i/search/timeline?f=tweets&q='
+    for i in parameters[1]:
+        if i[1] is not None:
+            url += i[0] + i[1]
+
+    headers = {
+        'Host': "twitter.com",
+        'User-Agent': "Mozilla/5.0 (Windows NT 6.1; Win64; x64)",
+        'Accept': "application/json, text/javascript, */*; q=0.01",
+        'Accept-Language': "de,en-US;q=0.7,en;q=0.3",
+        'X-Requested-With': "XMLHttpRequest",
+        'Referer': url,
+        'Connection': "keep-alive"
+    }
+
+    maxTweets = parameters[0]['maxTweets']
+    topTweets = parameters[0]['topTweets']
+
+    query = {'headers': headers, 'url': url, 'maxTweets': maxTweets, 'topTweets': topTweets}
+    return parse(query)
