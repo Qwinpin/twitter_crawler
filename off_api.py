@@ -8,9 +8,11 @@ class Tweet:
 def login():
     auths = []
     keys = [['EuWfHYw3IobAL8q2xrhmRQaz6', 'flVDfdM9ClclgCtkiOUGzKZzH5KjsvnkOGwcxJEUu18OET1wQL']]
+
     for key in keys:  
         auth = tweepy.AppAuthHandler(key[0], key[1])  
         auths.append(auth)
+
     api = tweepy.API(auths[0], wait_on_rate_limit = True, wait_on_rate_limit_notify = True)
     return api
 
@@ -35,6 +37,7 @@ def get_tweets_3200(api, parameters):
             new_tw = api.user_timeline(screen_name = name, count = 200, max_id = last_id)
         except tweepy.TweepError as err:
             return all_tweets, err
+
         all_tweets.extend(new_tw)
 
         last_id = all_tweets[-1].id - 1
@@ -101,3 +104,7 @@ def get_following(api, parameters):
 
 def group(iterable, count):
     return [iterable[i:i + count] for i in range(0, len(iterable), count)]
+
+def get_number_of_tweets(api, parameters):
+    #ooookay, it's boring
+    return 0
