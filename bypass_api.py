@@ -1,6 +1,5 @@
 import json, re, datetime, sys
 from pyquery import PyQuery
-import csv
 import requests
 
 class Tweet:
@@ -8,31 +7,43 @@ class Tweet:
         pass
 #send request to twitter, get json-data
 def getJsonReponse(parameters, refreshCursor, cookieJar, proxy):
-    
     try:
         response = requests.get((parameters['url'] + refreshCursor), cookies = cookieJar, headers = parameters['headers'])
         jsonResponse = response.json()
+        print(response.status_code)
     except:
         print("Twitter weird response. Try to see on browser: ", response.url)
         sys.exit()
-
+    
     return jsonResponse
 
 #parse json data, refresh 'page' to download new tweets
-def parse(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
+def parse(parameters, receiveBuffer = None, bufferLength = 100, proxy = None, cookieJar = None):
     refreshCursor = ''
     results = []
     resultsAux = []
-    cookieJar = requests.cookies.RequestsCookieJar()
+
+    if cookieJar is None:
+        cookieJar = requests.cookies.RequestsCookieJar()
+    i = 0
 
     active = True
     while active:
+        if i % 100 == 0:
+            print(len(results))
+        i += 1
+
         try:
             json = getJsonReponse(parameters, refreshCursor, cookieJar, proxy)
         except:
-            return [], 'err_request'
-        if len(json['items_html'].strip()) == 0:
+            return results, 'err_request', cookieJar
+        
+        try:
+            if len(json['items_html'].strip()) == 0:
+                break
+        except:
             break
+
         refreshCursor = json['min_position']
         tweets = PyQuery(json['items_html'])('div.js-stream-tweet')
         
@@ -50,10 +61,10 @@ def parse(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
             id = tweetPQ.attr("data-tweet-id")
             #permalink = tweetPQ.attr("data-permalink-path")
             
-            #geo = ''
-            #geoSpan = tweetPQ('span.Tweet-geo')
-            #if len(geoSpan) > 0:
-            #    geo = geoSpan.attr('title')
+            geo = ''
+            geoSpan = tweetPQ('span.Tweet-geo')
+            if len(geoSpan) > 0:
+                geo = geoSpan.attr('title')
             
             tweet.id_str = id
             #tweet.permalink = 'https://twitter.com' + permalink
@@ -64,8 +75,7 @@ def parse(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
             #tweet.favorites = favorites
             #tweet.mentions = " ".join(re.compile('(@\\w*)').findall(tweet.text))
             #tweet.hashtags = " ".join(re.compile('(#\\w*)').findall(tweet.text))
-            #tweet.geo = geo
-                
+            tweet.geo = geo
             results.append(tweet)
             resultsAux.append(tweet)
             
@@ -80,7 +90,7 @@ def parse(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
     if receiveBuffer and len(resultsAux) > 0:
         receiveBuffer(resultsAux)
 
-    return results, 0
+    return results, 0, cookieJar
 
 #for future, return sets of date-range, like [(2016-12-12, 2016-12-24), (2016-12-24, 2016-12-31)]
 def date_prepare(parameters):
@@ -106,7 +116,7 @@ def get_tweets(parameters):
         'Host': "twitter.com",
         'User-Agent': "Mozilla/5.0 (Windows NT 6.1; Win64; x64)",
         'Accept': "application/json, text/javascript, */*; q=0.01",
-        'Accept-Language': "de,en-US;q=0.7,en;q=0.3",
+        'Accept-Language': "ru-RU,de,en-US;q=0.7,en;q=0.3",
         'X-Requested-With': "XMLHttpRequest",
         'Referer': url,
         'Connection': "keep-alive"
@@ -114,6 +124,6 @@ def get_tweets(parameters):
 
     maxTweets = parameters[0]['maxTweets']
     topTweets = parameters[0]['topTweets']
-
+    cookieJar = parameters[0]['cookies']
     query = {'headers': headers, 'url': url, 'maxTweets': maxTweets, 'topTweets': topTweets}
-    return parse(query)
+    return parse(query, cookieJar)
