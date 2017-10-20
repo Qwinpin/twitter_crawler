@@ -16,13 +16,14 @@ def worker():
     #Set i - use when request sender is failed, err - use for debag, cook - if we failed in some iter we start it bagen from breakpoint
     #data - data at all
     i = True
-    err = None
+    err = 'err_request'
     cook = None
     data = None
     while ((err == 'err_request') and (i)):
+        print('start')
         settings = set_parameters(maxTweets = 42, since = '2017-01-20', querySearch = 'cat', cookies = cook)
-        data, err, cook = ba.get_tweets(settings)
-        i != i
+        data, err, cook = ba.parse(settings)
+        i = False
     return data, err
 
 data_2, err = worker()

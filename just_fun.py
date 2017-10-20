@@ -12,13 +12,13 @@ lis3 = ['asshole','shit','cunt', 'putin']
 lis4 = ['bitcoin law', 'law', 'bitcoin']
 
 lll = ['putin']
-for word in lll:
-    time = ['2017-07-20', '2017-05-21']
-    settings = set_parameters(maxTweets = 500, since = time[0], querySearch = word)
-    data, err, cookies = ba.get_tweets(settings)
+for word in lis2:
+    time = ['2017-05-20', '2017-05-21']
+    settings = set_parameters(maxTweets = 0, since = time[0], until = time[1], querySearch = word)
+    data, err, cookies = ba.parse(settings)
     for tweets in data:
         res.append([tweets.text, tweets.screenname, tweets.created_at, tweets.geo])
-    print(res, len(res))
+    print(res, err, len(res))
     name = './data/' + time[0] + '_' + word + '.csv'
     with open('C:\\github\\twitter_crawler\\mattestr2.csv', 'a') as csv_file:
         csv_writer = csv.writer(csv_file)

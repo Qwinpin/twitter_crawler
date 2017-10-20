@@ -5,26 +5,17 @@ import requests
 class Tweet:
     def __init__(self):
         pass
-#send request to twitter, get json-data
-def getJsonReponse(parameters, refreshCursor, cookieJar, proxy):
-    try:
-        response = requests.get((parameters['url'] + refreshCursor), cookies = cookieJar, headers = parameters['headers'])
-        jsonResponse = response.json()
-        print(response.status_code)
-    except:
-        print("Twitter weird response. Try to see on browser: ", response.url)
-        sys.exit()
-    
-    return jsonResponse
-
+        
 #parse json data, refresh 'page' to download new tweets
-def parse(parameters, receiveBuffer = None, bufferLength = 100, proxy = None, cookieJar = None):
+def parse(parameters, receiveBuffer = None, bufferLength = 100, proxy = None):
     refreshCursor = ''
     results = []
     resultsAux = []
 
-    if cookieJar is None:
+    if parameters['cookies'] is None:
         cookieJar = requests.cookies.RequestsCookieJar()
+    else:
+        cookieJar = parameters['cookies']
     i = 0
 
     active = True
@@ -34,10 +25,12 @@ def parse(parameters, receiveBuffer = None, bufferLength = 100, proxy = None, co
         i += 1
 
         try:
-            json = getJsonReponse(parameters, refreshCursor, cookieJar, proxy)
+            response = requests.get((parameters['url'] + refreshCursor), cookies = cookieJar, headers = parameters['headers'])
         except:
             return results, 'err_request', cookieJar
         
+        json = response.json()
+
         try:
             if len(json['items_html'].strip()) == 0:
                 break
@@ -104,26 +97,3 @@ def date_prepare(parameters):
     date_list = [(str(end - datetime.timedelta(days=x))[:10], str(end - datetime.timedelta(days=(x + 1)))[:10]) for x in range(days_between)]
     print(date_list)
 
-#prepare url, headers, numbers of tweets, create dict, call parse function
-def get_tweets(parameters):
-    #if element is None just dont use it
-    url = 'https://twitter.com/i/search/timeline?f=tweets&q='
-    for i in parameters[1]:
-        if i[1] is not None:
-            url += i[0] + i[1]
-
-    headers = {
-        'Host': "twitter.com",
-        'User-Agent': "Mozilla/5.0 (Windows NT 6.1; Win64; x64)",
-        'Accept': "application/json, text/javascript, */*; q=0.01",
-        'Accept-Language': "ru-RU,de,en-US;q=0.7,en;q=0.3",
-        'X-Requested-With': "XMLHttpRequest",
-        'Referer': url,
-        'Connection': "keep-alive"
-    }
-
-    maxTweets = parameters[0]['maxTweets']
-    topTweets = parameters[0]['topTweets']
-    cookieJar = parameters[0]['cookies']
-    query = {'headers': headers, 'url': url, 'maxTweets': maxTweets, 'topTweets': topTweets}
-    return parse(query, cookieJar)
