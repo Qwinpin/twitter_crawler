@@ -5,6 +5,16 @@ import requests
 class Tweet:
     def __init__(self):
         pass
+    def to_csv(self, save_settings):
+        #TODO нужен другой сепаратор csv файла
+        return ",".join([self.__dict__[field[0]] for field in save_settings if field[1] is True])
+
+def to_csv(tweets, filename, save_settings, rewrite=True):
+    mode = 'w' if rewrite else 'a'
+    with open(filename, mode=mode, encoding='utf-8') as file:
+        for tweet in tweets:
+            file.write(tweet.to_csv(save_settings) + '\n')
+
         
 #parse json data, refresh 'page' to download new tweets
 def parse(parameters, receiveBuffer = None, bufferLength = 100, proxy = None):
@@ -62,8 +72,9 @@ def parse(parameters, receiveBuffer = None, bufferLength = 100, proxy = None):
             tweet.id_str = id
             #tweet.permalink = 'https://twitter.com' + permalink
             tweet.screenname = usernameTweet
-            tweet.text = txt.encode('utf-8')
-            tweet.created_at = datetime.datetime.fromtimestamp(dateSec)
+            #TODO пофиксить кодировку. encode возвращает массив байтов. русский не робит
+            tweet.text = txt#.encode('utf-8')
+            tweet.created_at = datetime.datetime.fromtimestamp(dateSec).strftime("%Y-%m-%d %H:%M:%S")
             #tweet.retweets = retweets
             #tweet.favorites = favorites
             #tweet.mentions = " ".join(re.compile('(@\\w*)').findall(tweet.text))

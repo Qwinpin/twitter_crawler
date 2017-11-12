@@ -1,7 +1,6 @@
-import off_api as oa
+#import off_api as oa
 import bypass_api as ba
-from setting import set_parameters
-
+from setting import set_parameters, set_save_parameters
 #examples
 
 #off api
@@ -31,4 +30,5 @@ if data_2 is None:
     print(err)
 else:
     print(data_2[0].text)
+    ba.to_csv(data_2, 'tweets.csv', set_save_parameters())
     print(err)

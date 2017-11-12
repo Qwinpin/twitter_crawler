@@ -38,3 +38,19 @@ def set_parameters(screen_name = None, maxTweets = 1, since = None, until = None
     query = {'headers': headers, 'url': url, 'maxTweets': maxTweets, 'topTweets': topTweets, 'cookies': cookieJar}
 
     return query
+
+def set_save_parameters(id_str = True, permalink = False, screenname = True,text = True,
+                        created_at = True, retweets = False, favorites = False,
+                        mentions = False, hashtags = False, geo = True):
+    return (
+        ('id_str',id_str),
+        ('permalink',permalink),
+        ('screenname',screenname),
+        ('text',text),
+        ('created_at',created_at),
+        ('retweets',retweets),
+        ('favorites',favorites),
+        ('mentions',mentions),
+        ('hashtags',hashtags),
+        ('geo',geo)
+    )
