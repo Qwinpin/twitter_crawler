@@ -3,3 +3,7 @@
 
 *.csv
 .idea/
+
+\.vscode/launch\.json
+
+geany_run_script\.bat
