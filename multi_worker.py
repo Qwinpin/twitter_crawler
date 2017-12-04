@@ -16,10 +16,10 @@ def main_worker(queue):
         if err != 0:
             task['cookies'] = cook
             queue.put((task, saving_params))
-        else:
-            #TODO сохранение в бд на сервере
-            ba.to_csv(data, 'file_' + str(pid)+ '_', saving_params)
-            print(os.getpid(), "crawled", len(data), "tweets")
+
+        #TODO сохранение в бд на сервере
+        ba.to_csv(data, 'file_' + str(pid)+ '_', saving_params)
+        print(os.getpid(), "crawled", len(data), "tweets")
 
 def main():
     queue = Queue()
