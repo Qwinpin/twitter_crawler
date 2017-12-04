@@ -13,8 +13,13 @@ def main_worker(queue):
         query = task[0]
         saving_params = task[1]
         data, err, cook = ba.parse(query)
-        ba.to_csv(data, 'file_' + str(pid)+ '_', saving_params)
-        print(os.getpid(), "crawled", len(data), "tweets")
+        if err != 0:
+            task['cookies'] = cook
+            queue.put((task, saving_params))
+        else:
+            #TODO сохранение в бд на сервере
+            ba.to_csv(data, 'file_' + str(pid)+ '_', saving_params)
+            print(os.getpid(), "crawled", len(data), "tweets")
 
 def main():
     queue = Queue()
