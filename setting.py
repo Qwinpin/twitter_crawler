@@ -1,8 +1,11 @@
-def set_parameters(screen_name = None, maxTweets = 1, since = None, until = None, querySearch = None, 
-    topTweets = False, near = None, within = None, cookies = None):
+from requests.utils import quote
+
+def set_parameters(screen_name=None, maxTweets=1, since=None, until=None, querySearch=None, 
+    topTweets=False, near=None, within=None, cookies=None):
+    print(quote(querySearch))
     parameters_url = (
         (' from:', screen_name),
-        ('', querySearch),
+        ('', quote(querySearch)),
         ('&near:', near),
         (' within:', within),
         (' since:', since),
@@ -39,18 +42,19 @@ def set_parameters(screen_name = None, maxTweets = 1, since = None, until = None
 
     return query
 
-def set_save_parameters(id_str = True, permalink = False, screenname = True,text = True,
-                        created_at = True, retweets = False, favorites = False,
-                        mentions = False, hashtags = False, geo = True):
+def set_save_parameters(id_str=True, permalink=False, screenname=True,text=True,
+                        created_at=True, retweets=False, favorites=False,
+                        mentions=False, hashtags=False, geo=True):
     return (
-        ('id_str',id_str),
-        ('permalink',permalink),
-        ('screenname',screenname),
-        ('text',text),
-        ('created_at',created_at),
-        ('retweets',retweets),
-        ('favorites',favorites),
-        ('mentions',mentions),
-        ('hashtags',hashtags),
-        ('geo',geo)
+        ('id_str', id_str),
+        ('permalink', permalink),
+        ('screenname', screenname),
+        ('text', text),
+        ('created_at', created_at),
+        ('retweets', retweets),
+        ('favorites', favorites),
+        ('mentions', mentions),
+        ('hashtags', hashtags),
+        ('geo', geo)
     )
+    
