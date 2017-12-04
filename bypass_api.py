@@ -1,4 +1,5 @@
-import json, re, datetime, sys
+import re
+import datetime
 from pyquery import PyQuery
 import requests
 
@@ -15,30 +16,23 @@ def to_csv(tweets, filename, save_settings, rewrite=True):
         for tweet in tweets:
             file.write(tweet.to_csv(save_settings) + '\n')
 
-        
 #parse json data, refresh 'page' to download new tweets
-def parse(parameters, receiveBuffer = None, bufferLength = 100, proxy = None):
+def parse(parameters, receiveBuffer=None, bufferLength=100, proxy=None):
     refreshCursor = ''
     results = []
     resultsAux = []
-
+    #if cookies in not None - it's mean repeating of the task
     if parameters['cookies'] is None:
         cookieJar = requests.cookies.RequestsCookieJar()
     else:
         cookieJar = parameters['cookies']
-    i = 0
-
     active = True
     while active:
-        if i % 100 == 0:
-            print(len(results))
-        i += 1
-
+        #if any error - return current results and cookies for task manager
         try:
-            response = requests.get((parameters['url'] + refreshCursor), cookies = cookieJar, headers = parameters['headers'])
+            response = requests.get((parameters['url'] + refreshCursor), cookies=cookieJar, headers=parameters['headers'])
         except:
             return results, 'err_request', cookieJar
-        
         json = response.json()
 
         try:
@@ -61,7 +55,7 @@ def parse(parameters, receiveBuffer = None, bufferLength = 100, proxy = None):
             #retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
             #favorites = int(tweetPQ("span.ProfileTweet-action--favorite span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
             dateSec = int(tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
-            id = tweetPQ.attr("data-tweet-id")
+            ids = tweetPQ.attr("data-tweet-id")
             #permalink = tweetPQ.attr("data-permalink-path")
             
             geo = ''
@@ -69,11 +63,10 @@ def parse(parameters, receiveBuffer = None, bufferLength = 100, proxy = None):
             if len(geoSpan) > 0:
                 geo = geoSpan.attr('title')
             
-            tweet.id_str = id
+            tweet.id_str = ids
             #tweet.permalink = 'https://twitter.com' + permalink
             tweet.screenname = usernameTweet
-            #TODO пофиксить кодировку. encode возвращает массив байтов. русский не робит
-            tweet.text = txt#.encode('utf-8')
+            tweet.text = txt.encode('utf-8').decode('utf-8')
             tweet.created_at = datetime.datetime.fromtimestamp(dateSec).strftime("%Y-%m-%d %H:%M:%S")
             #tweet.retweets = retweets
             #tweet.favorites = favorites
@@ -107,4 +100,3 @@ def date_prepare(parameters):
     days_between = (end - start).days
     date_list = [(str(end - datetime.timedelta(days=x))[:10], str(end - datetime.timedelta(days=(x + 1)))[:10]) for x in range(days_between)]
     print(date_list)
-
