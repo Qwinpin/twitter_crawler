@@ -1,6 +1,6 @@
 class DataBase:
-    def save(self, tweets):
-        print('dssd')
+    def save(self, tweets, settings):
+        pass
 
 
 class CsvDB(DataBase):
