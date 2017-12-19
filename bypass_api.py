@@ -10,11 +10,6 @@ class Tweet:
         #TODO нужен другой сепаратор csv файла
         return ",".join([self.__dict__[field[0]] for field in save_settings if field[1] is True])
 
-def to_csv(tweets, filename, save_settings, rewrite=True):
-    mode = 'w' if rewrite else 'a'
-    with open(filename, mode=mode, encoding='utf-8') as file:
-        for tweet in tweets:
-            file.write(tweet.to_csv(save_settings) + '\n')
 
 #parse json data, refresh 'page' to download new tweets
 def parse(parameters, receiveBuffer=None, bufferLength=100, proxy=None):

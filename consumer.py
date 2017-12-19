@@ -1,17 +1,18 @@
 import pika
 import json
 import os
-from multiprocessing import Pool, Queue, Process
+from multiprocessing import Process
 
 import bypass_api as ba
 
 
 class Worker:
-    def __init__(self, host, port=5672, login='guest', password='guest'):
+    def __init__(self, db, host, port=5672, login='guest', password='guest'):
         self.host = host
         self.port = port
         self.login = login
         self.password = password
+        self.db = db
 
     def callback(self, ch, method, properties, body):
         task = json.loads(body)
@@ -26,7 +27,7 @@ class Worker:
             task['query_param']['cookies'] = cook
 
         # TODO сохранение в бд на сервере
-        ba.to_csv(allData, 'file_' + str(os.getpid()) + '_', task['save_param'])
+        self.db.save(allData, 'file_' + str(os.getpid()) + '.csv', task['save_param'])
         print(os.getpid(), "crawled", len(allData), "tweets")
 
         ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -41,7 +42,7 @@ class Worker:
         channel = connection.channel()
 
         channel.queue_declare(queue='task_queue', durable=True)
-        print(' [*] Waiting for messages. To exit press CTRL+C')
+        print(os.getpid(), 'is waiting for messages. ')
 
         channel.basic_qos(prefetch_count=1)
         channel.basic_consume(self.callback,
@@ -51,8 +52,7 @@ class Worker:
 
 
 def run_worker(host):
-    w = Worker(host=host)
-    w.run()
+    Worker(host=host).run()
 
 
 if __name__ == '__main__':
