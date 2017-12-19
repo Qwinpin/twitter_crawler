@@ -2,10 +2,10 @@ from requests.utils import quote
 
 def set_parameters(screen_name=None, maxTweets=1, since=None, until=None, querySearch=None, 
     topTweets=False, near=None, within=None, cookies=None):
-    print(quote(querySearch))
+
     parameters_url = (
         (' from:', screen_name),
-        ('', quote(querySearch)),
+        ('', querySearch if querySearch is None else quote(querySearch)),
         ('&near:', near),
         (' within:', within),
         (' since:', since),
