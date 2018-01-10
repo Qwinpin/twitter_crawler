@@ -4,7 +4,7 @@ import itertools
 import datetime
 
 
-def create_query(screen_name=None, maxTweets=1, since=None, until=None, querySearch=None,
+def create_query(screen_name=None, maxTweets=None, since=None, until=None, querySearch=None,
                  topTweets=False, geocode=None, cookies=None):
     parameters_url = (
         (' from:', screen_name),
@@ -41,6 +41,7 @@ def create_query(screen_name=None, maxTweets=1, since=None, until=None, querySea
     topTweets = topTweets
     cookieJar = cookies
 
+    print(maxTweets)
     query = {
         'headers': headers,
         'url': url,
@@ -58,7 +59,7 @@ def parse_location(geo):
     lon = geo["lon"] if "lon" in geo else 0
     lat = geo["lat"] if "lat" in geo else 0
     radius = str(geo["radius"]) + "km" if "radius" in geo else "1km"
-    return ",".join([lon, lat, radius])
+    return ",".join([str(lon), str(lat), radius])
 
 
 def date_range(start, end, delta):

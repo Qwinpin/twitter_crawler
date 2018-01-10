@@ -21,14 +21,13 @@ class Worker:
 
         allData = []
         while True:
-            data, err, cook = ba.parse(task['query_param'])
+            data, err, cook = ba.parse(task['query_param'], task['save_param'])
             allData += data
             if err == 0:
                 break
             task['query_param']['cookies'] = cook
 
-        # TODO сохранение в бд на сервере
-        self.db.save(allData, task['save_param'])
+        self.db.save(allData)
         print(os.getpid(), "crawled", len(allData), "tweets")
 
         ch.basic_ack(delivery_tag=method.delivery_tag)
