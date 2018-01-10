@@ -1,0 +1,32 @@
+[{
+   "screen_name": ["xbox", "kremlinrussia"],
+   "maxTweets": 100,
+   "since": "2017-01-01",
+   "until": "2018-01-01",
+   "querySearch": ["Россия", "game"],
+   "topTweets": false
+},
+{
+   "screen_name": ["fondskolkovo"],
+   "maxTweets": 200,
+   "since": "2017-08-15",
+   "until": "2018-01-01",
+   "topTweets": false
+},
+{
+   "until": "2018-01-08",
+   "querySearch": ["new", "year", "new year"],
+   "locations": [
+      {
+         "lat": 59.97669253,
+         "lon": 37.216751122,
+         "radius": 50
+      },
+      {
+         "lat": 37.97669253,
+         "lon": -122.216751122,
+         "radius": 50
+      }
+   ]
+}
+]

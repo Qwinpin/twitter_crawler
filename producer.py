@@ -1,7 +1,8 @@
 import pika
+import sys
 import json
 
-from setting import set_parameters, set_save_parameters
+from task_creator import create_tasks
 
 
 class Producer:
@@ -29,19 +30,26 @@ class Producer:
             print(" [x] Sent %r" % (task,))
 
 
+def read_query(filename):
+    return json.load(open(filename))
+
+
+def parse_argv(argv):
+    if len(argv) != 2:
+        raise Exception('Two input settings files are required')
+
+    return read_query(argv[0]), read_query(argv[1])
+
+
 if __name__ == '__main__':
     p = Producer('localhost')
     p.run()
-    tasks = []
-    for i in range(10, 30):
-        message = {
-            'query_param': set_parameters(maxTweets=300,
-                                          since=('2017-01-' + str(i)),
-                                          until=('2017-01-' + str(i + 1)),
-                                          screen_name='xbox'),
+    try:
+        # query = parse_argv(sys.argv[1:])
+        query, saveSet = parse_argv(['query.json', 'save_settings.json'])
+        tasks = create_tasks(query, saveSet)
+        p.send_tasks(tasks)
+        p.stop()
 
-            'save_param': set_save_parameters()
-        }
-        tasks.append(json.dumps(message))
-    p.send_tasks(tasks)
-    p.stop()
+    except Exception:
+        print(sys.exc_info())

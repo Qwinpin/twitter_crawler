@@ -1,6 +1,6 @@
 #import off_api as oa
 import bypass_api as ba
-from setting import set_parameters, set_save_parameters
+from task_creator import set_parameters, set_save_parameters
 #examples
 
 def worker():
