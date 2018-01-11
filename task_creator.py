@@ -4,14 +4,15 @@ import itertools
 import datetime
 
 
-def create_query(screen_name=None, maxTweets=None, since=None, until=None, querySearch=None,
-                 topTweets=False, geocode=None, cookies=None):
+def create_query(screen_name=None, maxTweets=None, since=None, until=None, querySearch='',
+                 topTweets=False, near=None, within=None, cookies=None):
     parameters_url = (
         (' from:', screen_name),
-        (' ', None if querySearch is None else quote(querySearch)),
-        (' &since:', since),
+        (' ', quote(querySearch)),
+        ('&near:', near),
+        (' within:', within),
+        (' since:', since),
         (' until:', until),
-        (' geocode:', geocode),
         ('&src=typd&max_position=', '')
     )
 
@@ -26,7 +27,7 @@ def create_query(screen_name=None, maxTweets=None, since=None, until=None, query
     for i in parameters_url:
         if i[1] is not None:
             url += i[0] + i[1]
-    print(url)
+
     headers = {
         'Host': "twitter.com",
         'User-Agent': "Mozilla/5.0 (Windows NT 6.1; Win64; x64)",
@@ -41,7 +42,6 @@ def create_query(screen_name=None, maxTweets=None, since=None, until=None, query
     topTweets = topTweets
     cookieJar = cookies
 
-    print(maxTweets)
     query = {
         'headers': headers,
         'url': url,
@@ -58,8 +58,7 @@ def parse_location(geo):
         return None
     lon = geo["lon"] if "lon" in geo else 0
     lat = geo["lat"] if "lat" in geo else 0
-    radius = str(geo["radius"]) + "km" if "radius" in geo else "1km"
-    return ",".join([str(lon), str(lat), radius])
+    return ",".join([str(lon), str(lat)])
 
 
 def date_range(start, end, delta):
@@ -104,11 +103,12 @@ def create_tasks(queries, saveParam):
             p = dict([(a, b) for a, b in element])
             mes = create_query(
                 screen_name=p.get('screen_name'),
-                geocode=parse_location(p.get('geo')),
+                near=parse_location(p.get('geo')),
+                within=str(p['geo']['radius']) + 'km' if 'geo' in p else None,
                 maxTweets=maxTweets,
                 since=p.get('interval')[0],
                 until=p.get('interval')[1],
-                querySearch=p.get('querySearch'),
+                querySearch=p['querySearch'] if 'querySearch' in p else '',
                 topTweets=topTweets)
 
             tasks.append(json.dumps({

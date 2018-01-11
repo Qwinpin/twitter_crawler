@@ -41,6 +41,10 @@ class Worker:
         connection = pika.BlockingConnection(parameters)
         channel = connection.channel()
 
+        # раскоментируй этот делит если в очереди образауются задачи которые 
+        # не нужно выполнять. это удалит очередь а потом она создастя снова
+        # channel.queue_delete(queue='task_queue')
+        
         channel.queue_declare(queue='task_queue', durable=True)
         print(os.getpid(), 'is waiting for messages. ')
 
