@@ -1,4 +1,5 @@
 import csv
+import sqlite3 as sql
 
 class DataBase:
     def save(self, tweets, settings):
@@ -17,3 +18,15 @@ class CsvDB(DataBase):
             wr = csv.writer(csv_file, delimiter=',')
             for tweet in tweets:
                 wr.writerow(list(tweet))
+
+class SQLite3(DataBase):
+    def __init__(self, filename):
+        self.table = filename
+        self.db = sql.connect('.//twitter.db')
+        self.cursor = self.db.cursor()
+    
+    def save(self, tweets):
+        for row in tweets:
+            self.cursor.execute('''INSERT INTO tweets(id, screen_name, date, text)
+                  VALUES(?,?,?,?)''', (row.id_str,row.screenname, row.created_at, row.text))
+        self.db.commit()
