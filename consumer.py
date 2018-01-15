@@ -4,7 +4,7 @@ import os
 from multiprocessing import Process
 
 import bypass_api as ba
-from database import CsvDB
+from database import CsvDB, SQLite3
 
 
 class Worker:
@@ -16,7 +16,7 @@ class Worker:
         self.db = db
 
     def callback(self, ch, method, properties, body):
-        task = json.loads(body)
+        task = json.loads(body.decode('utf-8'))
         print(" [x] Received ", task)
 
         allData = []
@@ -43,7 +43,7 @@ class Worker:
 
         # раскоментируй этот делит если в очереди образауются задачи которые 
         # не нужно выполнять. это удалит очередь а потом она создастя снова
-        # channel.queue_delete(queue='task_queue')
+        channel.queue_delete(queue='task_queue')
         
         channel.queue_declare(queue='task_queue', durable=True)
         print(os.getpid(), 'is waiting for messages. ')
@@ -56,7 +56,7 @@ class Worker:
 
 
 def run_worker(host, file):
-    Worker(host=host, db=CsvDB(filename=file)).run()
+    Worker(host=host, db=SQLite3(filename=file)).run()
 
 
 if __name__ == '__main__':
