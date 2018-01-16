@@ -27,7 +27,7 @@ class Worker:
                 break
             task['query_param']['cookies'] = cook
 
-        self.db.save(allData)
+        self.db.save(allData, task['query_param'])
         print(os.getpid(), "crawled", len(allData), "tweets")
 
         ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -43,7 +43,7 @@ class Worker:
 
         # раскоментируй этот делит если в очереди образауются задачи которые 
         # не нужно выполнять. это удалит очередь а потом она создастя снова
-        channel.queue_delete(queue='task_queue')
+        #channel.queue_delete(queue='task_queue')
         
         channel.queue_declare(queue='task_queue', durable=True)
         print(os.getpid(), 'is waiting for messages. ')
@@ -63,7 +63,8 @@ if __name__ == '__main__':
     N = 4
     workers = []
     for i in range(N):
-        w = Process(target=run_worker, args=('localhost', 'file_' + str(i) + '.csv'))
+        #w = Process(target=run_worker, args=('localhost', 'file_' + str(i) + '.csv'))
+        w = Process(target=run_worker, args=('localhost', 'twitter'))
         w.start()
         workers.append(w)
 
