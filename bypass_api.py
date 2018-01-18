@@ -56,11 +56,14 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
             tweet = Tweet(save_settings)
             usernameTweet = tweetPQ("span:first.username.u-dir b").text()
             txt = re.sub(r"\s+", " ", tweetPQ("p.js-tweet-text").text().replace('# ', '#').replace('@ ', '@'))
-            # retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
-            # favorites = int(tweetPQ("span.ProfileTweet-action--favorite span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
-            dateSec = int(tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
+            #retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
+            #favorites = int(tweetPQ("span.ProfileTweet-action--favorite span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
+            try:
+                dateSec = int(tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
+            except:
+                dateSec = 0
             ids = tweetPQ.attr("data-tweet-id")
-            # permalink = tweetPQ.attr("data-permalink-path")
+            permalink = tweetPQ.attr("data-permalink-path")
 
             geo = ''
             geoSpan = tweetPQ('span.Tweet-geo')
@@ -68,14 +71,17 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
                 geo = geoSpan.attr('title')
 
             tweet.id_str = ids
-            # tweet.permalink = 'https://twitter.com' + permalink
+            tweet.permalink = 'https://twitter.com' + permalink
             tweet.screenname = usernameTweet
             tweet.text = txt.encode('utf-8').decode('utf-8')
-            tweet.created_at = datetime.datetime.fromtimestamp(dateSec).strftime("%Y-%m-%d %H:%M:%S")
-            # tweet.retweets = retweets
-            # tweet.favorites = favorites
-            # tweet.mentions = " ".join(re.compile('(@\\w*)').findall(tweet.text))
-            # tweet.hashtags = " ".join(re.compile('(#\\w*)').findall(tweet.text))
+            if dateSec != 0:
+                tweet.created_at = datetime.datetime.fromtimestamp(dateSec).strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                tweet.created_at = '1970-01-01'
+            #tweet.retweets = retweets
+            #tweet.favorites = favorites
+            tweet.mentions = " ".join(re.compile('(@\\w*)').findall(tweet.text))
+            tweet.hashtags = " ".join(re.compile('(#\\w*)').findall(tweet.text))
             tweet.geo = geo
             results.append(tweet)
             resultsAux.append(tweet)
