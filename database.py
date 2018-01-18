@@ -27,6 +27,7 @@ class SQLite3(DataBase):
     
     def save(self, tweets, query):
         for row in tweets:
-            self.cursor.execute('''INSERT INTO tweets(id, screen_name, date, text, query)
-                  VALUES(?,?,?,?,?)''', (row.id_str,row.screenname, row.created_at, row.text, '_'.join(query)))
+            self.cursor.execute('''INSERT INTO tweets(id_str, screenname, created_at, text, url)
+                  VALUES(?,?,?,?,?)''', (row.id_str,row.screenname, row.created_at, \
+                  row.text, query['url']))
         self.db.commit()
