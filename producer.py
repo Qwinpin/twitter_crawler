@@ -6,15 +6,16 @@ from task_creator import create_tasks
 
 
 class Producer:
-    def __init__(self, host, port=5672, login='guest', password='guest'):
+    def __init__(self, host, port=5672, login='serv', password='1234'):
         self.login = login
         self.password = password
         self.host = host
         self.port = port
 
     def run(self):
+        credentials = pika.PlainCredentials(self.login, self.password)
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host=self.host))
+            host=self.host, credentials=credentials))
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue='task_queue', durable=True)
 
@@ -42,7 +43,7 @@ def parse_argv(argv):
 
 
 if __name__ == '__main__':
-    p = Producer('localhost')
+    p = Producer('192.168.0.245')
     p.run()
     try:
         # query = parse_argv(sys.argv[1:])

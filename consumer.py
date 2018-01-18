@@ -8,7 +8,7 @@ from database import CsvDB, SQLite3
 
 
 class Worker:
-    def __init__(self, db, host, port=5672, login='guest', password='guest'):
+    def __init__(self, db, host, port=5672, login='work', password='1234'):
         self.host = host
         self.port = port
         self.login = login
@@ -43,7 +43,7 @@ class Worker:
 
         # раскоментируй этот делит если в очереди образауются задачи которые 
         # не нужно выполнять. это удалит очередь а потом она создастя снова
-        #channel.queue_delete(queue='task_queue')
+        channel.queue_delete(queue='task_queue')
         
         channel.queue_declare(queue='task_queue', durable=True)
         print(os.getpid(), 'is waiting for messages. ')
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     workers = []
     for i in range(N):
         #w = Process(target=run_worker, args=('localhost', 'file_' + str(i) + '.csv'))
-        w = Process(target=run_worker, args=('localhost', 'twitter'))
+        w = Process(target=run_worker, args=('192.168.0.245', 'twitter'))
         w.start()
         workers.append(w)
 
