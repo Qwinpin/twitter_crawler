@@ -12,5 +12,3 @@ Requirements:
  - rabbitmq-server
  - sqlite3
  - Tweepy - https://github.com/tweepy/tweepy
-
-Used GetOldTweets-python by Jefferson-Henrique (https://github.com/Jefferson-Henrique/GetOldTweets-python) - realy thx, u great man
