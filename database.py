@@ -27,7 +27,10 @@ class SQLite3(DataBase):
     
     def save(self, tweets, query):
         for row in tweets:
-            self.cursor.execute('''INSERT INTO tweets(id_str, screenname, created_at, text, url)
-                  VALUES(?,?,?,?,?)''', (row.id_str,row.screenname, row.created_at, \
-                  row.text, query['url']))
+            self.cursor.execute('''INSERT INTO tweets(id_str, screenname, created_at, text, url, reply_to)
+                  VALUES(?,?,?,?,?,?)''', (row.id_str,row.screenname, row.created_at, \
+                  row.text, query['url'], row.reply_to#, row.likes_users, row.retweet_users
+                  #'---'.join('{}{}'.format(key, val) for key, val in row.likes_users.items()), \
+                  #'---'.join('{}{}'.format(key, val) for key, val in row.retweet_users.items()
+                  ))
         self.db.commit()
