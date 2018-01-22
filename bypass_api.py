@@ -23,6 +23,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     tweet = Tweet(save_settings)
     usernameTweet = tweetPQ("span:first.username.u-dir b").text()
     txt = re.sub(r"\s+", " ", tweetPQ("p.js-tweet-text").text().replace('# ', '#').replace('@ ', '@'))
+    pic = re.findall(r"(pic.twitter.com[^\s]+)", txt)
     retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr("data-tweet-stat-count"))
     favorites = int(tweetPQ("span.ProfileTweet-action--favorite span.ProfileTweet-actionCount").attr("data-tweet-stat-count"))
     reply = int(tweetPQ("span.ProfileTweet-action--reply span.ProfileTweet-actionCount").attr("data-tweet-stat-count"))
@@ -78,6 +79,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
         tweet.created_at = datetime.datetime.fromtimestamp(dateSec).strftime("%Y-%m-%d %H:%M:%S")
     else:
         tweet.created_at = '1970-01-01'
+    tweet.pic = ', '.join(pic)
     tweet.retweets = retweets
     tweet.favorites = favorites
     tweet.reply = reply

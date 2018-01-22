@@ -30,13 +30,14 @@ class SQLite3(DataBase):
         for row in tqdm(tweets):
             try:
                 self.cursor.execute('''INSERT INTO tweets(id_str, screenname, created_at, text, \
-                    url, reply_to, favorites, replys, retweets, likes_users, retweet_users)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?)''', (row.id_str,row.screenname, row.created_at, \
+                    url, reply_to, favorites, replys, retweets, likes_users, retweet_users, pic)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''', (row.id_str,row.screenname, row.created_at, \
                     row.text, query['url'], row.reply_to, row.favorites, row.reply, row.retweets, \
                     ', '.join(['-'.join('{} : {}'.format(key, value) for key, value in d.items()) \
                                 for d in row.likes_users]), 
                     ', '.join(['-'.join('{} : {}'.format(key, value) for key, value in d.items()) \
                                 for d in row.retweet_users]), 
+                    row.pic
                 ))
             except sql.IntegrityError as e:
                 pass
