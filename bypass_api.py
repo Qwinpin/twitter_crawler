@@ -19,14 +19,13 @@ class Tweet:
                          if self.save_settings[field]])
 
 def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
-    if id_origin != '':
-        print('5 WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOP')
     tweetPQ = PyQuery(tweetHTML)
     tweet = Tweet(save_settings)
     usernameTweet = tweetPQ("span:first.username.u-dir b").text()
     txt = re.sub(r"\s+", " ", tweetPQ("p.js-tweet-text").text().replace('# ', '#').replace('@ ', '@'))
     retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr("data-tweet-stat-count"))
     favorites = int(tweetPQ("span.ProfileTweet-action--favorite span.ProfileTweet-actionCount").attr("data-tweet-stat-count"))
+    reply = int(tweetPQ("span.ProfileTweet-action--reply span.ProfileTweet-actionCount").attr("data-tweet-stat-count"))
     try:
         dateSec = int(tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
     except:
@@ -53,9 +52,8 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     else:
         likes = PyQuery(likes_response.json()['htmlUsers'])('ol')
         for i in likes[0]:
-            likes_users.append({'id': PyQuery(i)('div.account').attr('data-user-id'), \
-                                'screenname': PyQuery(i)('div.account').attr('data-name')})
-
+            likes_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
+                                PyQuery(i)('div.account').attr('data-name')})
     retweet_users = []
     retweet_url = 'https://twitter.com/i/activity/retweeted_popup?id=' + str(ids)
     retweet_headers = parameters['headers']
@@ -69,8 +67,8 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     else:
         retweet = PyQuery(retweet_response.json()['htmlUsers'])('ol')
         for i in retweet[0]:
-            retweet_users.append({'id': PyQuery(i)('div.account').attr('data-user-id'), \
-                                'screenname': PyQuery(i)('div.account').attr('data-name')})
+            retweet_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
+                                PyQuery(i)('div.account').attr('data-name')})
 
     tweet.id_str = ids
     tweet.permalink = 'https://twitter.com' + permalink
@@ -82,13 +80,72 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
         tweet.created_at = '1970-01-01'
     tweet.retweets = retweets
     tweet.favorites = favorites
+    tweet.reply = reply
     tweet.retweet_users = retweet_users
     tweet.likes_users = likes_users
     tweet.mentions = " ".join(re.compile('(@\\w*)').findall(tweet.text))
     tweet.hashtags = " ".join(re.compile('(#\\w*)').findall(tweet.text))
     tweet.geo = geo
     tweet.reply_to = id_origin
-    return {'tweet': tweet, 'id': ids, 'name': usernameTweet}
+    return tweet
+
+def parse_reply(data, parameters, save_settings):
+    reply_refreshCursor = ''
+    reply_url ='https://twitter.com/' + data.screenname + '/status/' + data.id_str + '?conversation_id=' + data.id_str
+    reply_headers = parameters['headers']
+    reply_headers['Referer'] = reply_url
+    reply_cookieJar = requests.cookies.RequestsCookieJar()
+    main_conv_page = True
+    try:
+        reply_response = requests.get((reply_url), cookies=reply_cookieJar,
+                                headers=reply_headers)
+    except:
+        reply_tweets = []
+        reply_active = False
+    else:
+        reply_active = True
+
+    while reply_active:
+        if main_conv_page:
+            page = PyQuery(reply_response.content)
+            reply_tweets = page('div.js-stream-tweet')
+            reply_refreshCursor = page('div.stream-container').attr('data-min-position')
+            if reply_refreshCursor == '':
+                reply_refreshCursor = page('li.ThreadedConversation-moreReplies').attr('data-expansion-url')
+            if reply_refreshCursor is None:
+                reply_refreshCursor = ''
+            main_conv_page = False
+        else:
+            try:
+                reply_json = reply_response.json()
+            except:
+                break
+            
+            try:
+                if len(reply_json['items_html'].strip()) == 0:
+                    reply_tweets = []
+            except:
+                break
+
+            reply_refreshCursor = reply_json['min_position']
+            if reply_refreshCursor is None:
+                reply_refreshCursor = ''
+                reply_active = False
+            reply_tweets = PyQuery(reply_json['items_html'])('div.js-stream-tweet')
+
+        for reply_tweetHTML in reply_tweets:
+            reply_data = parse_page(reply_tweetHTML, parameters, save_settings, data.id_str)
+            yield reply_data
+        
+        reply_url = 'https://twitter.com/i/' + data.screenname + '/conversation/' + data.id_str + \
+                '?conversation_id=' + data.id_str + '?include_available_features=1&include_entities=1&max_position=' + \
+                reply_refreshCursor + '&reset_error_state=false'
+        try:
+            reply_response = requests.get((reply_url), cookies=reply_cookieJar,
+                            headers=reply_headers)
+        except:
+            break
+
 
 # parse json data, refresh 'page' to download new tweets
 def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy=None):
@@ -113,10 +170,7 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
         except:
             json = {'items_html': ''}
 
-        try:
-            if len(json['items_html'].strip()) == 0:
-                break
-        except:
+        if len(json['items_html'].strip()) == 0:
             break
 
         refreshCursor = json['min_position']
@@ -127,60 +181,11 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
         # parse and add to object to return
         for tweetHTML in tweets:
             data = parse_page(tweetHTML, parameters, save_settings)
-            results.append(data['tweet'])
-            resultsAux.append(data['tweet'])
-
-            reply_refreshCursor = ''
-            reply_url ='https://twitter.com/' + data['name'] + '/status/' + data['id'] + '?conversation_id=' + data['id']
-            reply_headers = parameters['headers']
-            reply_headers['Referer'] = reply_url
-            reply_cookieJar = requests.cookies.RequestsCookieJar()
-            try:
-                reply_response = requests.get((reply_url), cookies=reply_cookieJar,
-                                        headers=reply_headers)
-            except:
-                print('1 WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOP')
-                reply_tweets = []
-            else:
-                reply_active = True
-                while reply_active:
-                    try:
-                        reply_json = reply_response.json()
-                    except:
-                        print('2 WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOP')
-                        break
-                    
-                    try:
-                        if len(json['items_html'].strip()) == 0:
-                            reply_tweets = []
-                    except:
-                        print('3 WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOP')
-                        break
-                    if reply_refreshCursor == '':
-                        reply_refreshCursor = PyQuery(json['page'])('div.stream-container').attr('data-min-position')
-                        reply_tweets = PyQuery(json['page'])('div.js-stream-tweet')
-                    else:
-                        reply_refreshCursor = json['descendants']['min_position']
-                        reply_tweets = PyQuery(json['items_html'])('div.js-stream-tweet')
-
-                    for reply_tweetHTML in reply_tweets:
-                        reply_data = parse_page(tweetHTML, parameters, save_settings, data['id'])
-                        results.append(reply_data['tweet'])
-
-                    if parameters['maxTweets'] is not None:
-                        if 0 < parameters['maxTweets'] <= len(results):
-                            reply_active = False
-                            break
-                    
-                    reply_url = 'https://twitter.com/i/' + data['name'] + '/conversation/' + data['id'] + \
-                            '?include_available_features=1&include_entities=1&max_position=' + \
-                            reply_refreshCursor + '&reset_error_state=false'
-                    try:
-                        reply_response = requests.get((reply_url + reply_refreshCursor), cookies=reply_cookieJar,
-                                        headers=reply_headers)
-                    except:
-                        print('4 WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOP')
-                        break
+            results.append(data)
+            resultsAux.append(data)
+            if data.reply != 0:
+                for reply_data in parse_reply(data, parameters, save_settings):
+                    results.append(reply_data)
 
             if receiveBuffer and len(resultsAux) >= bufferLength:
                 receiveBuffer(resultsAux)
