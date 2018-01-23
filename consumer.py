@@ -16,10 +16,7 @@ class Worker:
         self.password = password
         self.db = db
 
-    def callback(self, ch, method, properties, body):
-        task = json.loads(body.decode('utf-8'))
-        print(" [x] Received ", task)
-
+    def crawl_tweets(self, task):
         allData = []
         while True:
             data, err, cook = ba.parse(task['query_param'], task['save_param'])
@@ -31,7 +28,22 @@ class Worker:
         self.db.save_tweets(allData, task['query_param'])
         print(os.getpid(), "crawled", len(allData), "tweets")
 
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+    def crawl_profile(self, task):
+        pass
+
+    def callback(self, ch, method, properties, body):
+        task = json.loads(body.decode('utf-8'))
+        print(" [x] Received ", task)
+        try:
+            if task[type] == "tweets":
+                self.crawl_tweets(task)
+            elif task[type] == "profile":
+                self.crawl_profile(task)
+        except:
+            pass
+        else:
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+
 
     def run(self, clear_queue):
         credentials = pika.PlainCredentials(self.login, self.password)
