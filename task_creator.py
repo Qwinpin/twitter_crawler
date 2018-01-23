@@ -55,11 +55,12 @@ def create_tweet_query(screen_name=None, maxTweets=None, since=None, until=None,
 
     return query
 
-def create_task(query, saveParam, type):
+def create_task(query, saveParam, type, recursion):
     return json.dumps({
         'query_param': query,
         'save_param': saveParam,
-        'type': type
+        'type': type,
+        'recursion': recursion
     })
 
 
@@ -92,6 +93,7 @@ def create_tasks(queries, saveParam):
         maxTweets = q['maxTweets'] if ('maxTweets' in q) else None
         now = datetime.datetime.today()
         topTweets = q['topTweets'] if 'topTweets' in q else None
+        recursion = q['recursion'] if 'recursion' in q else 0
 
         a = []
         if 'querySearch' in q:
@@ -128,7 +130,8 @@ def create_tasks(queries, saveParam):
 
             tweet_tasks.append(create_task(query=query,
                                            saveParam=saveParam,
-                                           type='tweets'))
+                                           type='tweets',
+                                           recursion=recursion))
 
         for name in names:
             pass

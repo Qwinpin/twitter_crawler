@@ -4,7 +4,8 @@
    "since": "2017-01-01",
    "until": "2018-01-01",
    "querySearch": ["Россия", "game"],
-   "topTweets": false
+   "topTweets": false,
+   "recursion": 1
 },
 {
    "screen_name": ["fondskolkovo"],
@@ -27,6 +28,7 @@
          "lon": -122.216751122,
          "radius": 50
       }
-   ]
+   ],
+   "recursion": 1
 }
 ]
