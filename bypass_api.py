@@ -133,7 +133,10 @@ def parse_reply(data, parameters, save_settings):
             if reply_refreshCursor is None:
                 reply_refreshCursor = ''
                 reply_active = False
-            reply_tweets = PyQuery(reply_json['items_html'])('div.js-stream-tweet')
+            try:
+                reply_tweets = PyQuery(reply_json['items_html'])('div.js-stream-tweet')
+            except:
+                pass
 
         for reply_tweetHTML in reply_tweets:
             reply_data = parse_page(reply_tweetHTML, parameters, save_settings, data.id_str)

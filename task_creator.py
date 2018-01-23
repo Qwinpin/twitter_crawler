@@ -7,9 +7,9 @@ import datetime
 def create_query(screen_name=None, maxTweets=None, since=None, until=None, querySearch='',
                  topTweets=False, near=None, within=None, cookies=None):
     parameters_url = (
+        ('', querySearch),
         (' from:', screen_name),
-        (' ', quote(querySearch)),
-        ('&near:', near),
+        (' near:', near),
         (' within:', within),
         (' since:', since),
         (' until:', until),
@@ -22,21 +22,21 @@ def create_query(screen_name=None, maxTweets=None, since=None, until=None, query
         'topTweets': topTweets,
         'cookies': cookies
     }
+    if parameters_url[0][1] != '':
+        url = 'https://twitter.com/i/search/timeline?l=&q='
+    else:
+        url = 'https://twitter.com/i/search/timeline?l=&q='
 
-    url = 'https://twitter.com/i/search/timeline?f=tweets&q='
     for i in parameters_url:
         if i[1] is not None:
             url += i[0] + i[1]
 
     headers = {
-        'Host': "twitter.com",
-        'User-Agent': "Mozilla/5.0 (Windows NT 6.1; Win64; x64)",
-        'Accept': "application/json, text/javascript, */*; q=0.01",
-        'Accept-Language': "ru-RU,de,en-US;q=0.7,en;q=0.3",
-        'X-Requested-With': "XMLHttpRequest",
-        'Referer': url,
-        'Connection': "keep-alive"
-    }
+        'Host': "twitter.com",\
+        'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0",\
+        'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",\
+        'Accept-Language': "en-US,en;q=0.5", \
+        'Connection': "keep-alive" }    
 
     maxTweets = maxTweets
     topTweets = topTweets

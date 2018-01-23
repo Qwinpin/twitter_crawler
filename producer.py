@@ -43,7 +43,7 @@ def parse_argv(argv):
 
 
 if __name__ == '__main__':
-    p = Producer('192.168.0.245')
+    p = Producer('localhost')
     p.run()
     try:
         # query = parse_argv(sys.argv[1:])

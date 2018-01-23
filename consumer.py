@@ -1,6 +1,7 @@
 import pika
 import json
 import os
+import argparse
 from multiprocessing import Process
 
 import bypass_api as ba
@@ -32,7 +33,7 @@ class Worker:
 
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    def run(self):
+    def run(self, clear_queue):
         credentials = pika.PlainCredentials(self.login, self.password)
         parameters = pika.ConnectionParameters(self.host,
                                                self.port,
@@ -43,7 +44,8 @@ class Worker:
 
         # раскоментируй этот делит если в очереди образауются задачи которые 
         # не нужно выполнять. это удалит очередь а потом она создастя снова
-        channel.queue_delete(queue='task_queue')
+        if clear_queue:
+            channel.queue_delete(queue='task_queue')
         
         channel.queue_declare(queue='task_queue', durable=True)
         print(os.getpid(), 'is waiting for messages. ')
@@ -55,16 +57,24 @@ class Worker:
         channel.start_consuming()
 
 
-def run_worker(host, file):
-    Worker(host=host, db=SQLite3(filename=file)).run()
+def run_worker(host, file, clear_queue):
+    Worker(host=host, db=SQLite3(filename=file)).run(clear_queue)
 
 
 if __name__ == '__main__':
-    N = 4
+    parser = argparse.ArgumentParser(description='Crawler')
+    parser.add_argument('-cq', '--clear_queue', help='Clear queue', default=False, dest="cq", type=bool)
+    parser.add_argument('-w', '--workers', help='Set number of workers', default=4, type=int, dest="workers_num")
+    args_c = parser.parse_args()
+    N = args_c.workers_num
     workers = []
     for i in range(N):
         #w = Process(target=run_worker, args=('localhost', 'file_' + str(i) + '.csv'))
-        w = Process(target=run_worker, args=('192.168.0.245', 'twitter'))
+        if args_c.cq:
+            w = Process(target=run_worker, args=('localhost', 'twitter', True))
+            args_c.cq = False
+        else:
+            w = Process(target=run_worker, args=('localhost', 'twitter', False))
         w.start()
         workers.append(w)
 
