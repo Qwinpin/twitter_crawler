@@ -65,7 +65,16 @@ def create_task(query, saveParam, type, recursion):
 
 
 def create_profile_query(screenname):
-    pass
+    return {'headers': get_headers(),
+            'url': 'https://twitter.com/' + screenname
+            }
+
+def create_profile_task(query, type, recursion):
+    return json.dumps({
+        'query_param': query,
+        'type': type,
+        'recursion': recursion
+    })
 
 
 def parse_location(geo):
@@ -127,13 +136,17 @@ def create_tasks(queries, saveParam):
                 until=p.get('interval')[1],
                 querySearch=p['querySearch'] if 'querySearch' in p else '',
                 topTweets=topTweets)
-
             tweet_tasks.append(create_task(query=query,
                                            saveParam=saveParam,
                                            type='tweets',
                                            recursion=recursion))
 
         for name in names:
-            pass
+            profile_query = create_profile_query(
+                screenname=name
+            )
+            profile_tasks.append(create_profile_task(query = profile_query,
+                                            type='profile',
+                                            recursion=recursion))
 
-    return tweet_tasks
+    return tweet_tasks + profile_tasks
