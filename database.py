@@ -3,17 +3,18 @@ import sqlite3 as sql
 from tqdm import tqdm
 
 class DataBase:
-    def save(self, tweets, settings):
+    def save_tweets(self, tweets, query):
         pass
 
+    def save_profile(self, profile):
+        pass
 
-# TODO сохранение в бд на сервере
 class CsvDB(DataBase):
     def __init__(self, filename, rewrite=False):
         self.filename = filename
         self.rewrite = rewrite
 
-    def save(self, tweets):
+    def save_tweets(self, tweets, query=None):
         mode = 'wb' if self.rewrite else 'a'
         with open(self.filename, mode=mode, encoding='utf-8') as csv_file:
             wr = csv.writer(csv_file, delimiter=',')
@@ -26,7 +27,7 @@ class SQLite3(DataBase):
         self.db = sql.connect('.//twitter.db')
         self.cursor = self.db.cursor()
     
-    def save(self, tweets, query):
+    def save_tweets(self, tweets, query):
         for row in tqdm(tweets):
             try:
                 self.cursor.execute('''INSERT INTO tweets(id_str, screenname, created_at, text, \
@@ -40,5 +41,8 @@ class SQLite3(DataBase):
                     row.pic
                 ))
             except sql.IntegrityError as e:
-                pass
+                self.db.rollback()
         self.db.commit()
+
+    def save_profile(self, profile):
+        pass

@@ -28,7 +28,7 @@ class Worker:
                 break
             task['query_param']['cookies'] = cook
 
-        self.db.save(allData, task['query_param'])
+        self.db.save_tweets(allData, task['query_param'])
         print(os.getpid(), "crawled", len(allData), "tweets")
 
         ch.basic_ack(delivery_tag=method.delivery_tag)
