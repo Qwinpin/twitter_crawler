@@ -3,9 +3,19 @@ import json
 import itertools
 import datetime
 
+#TODO header generator
+def get_headers():
+    headers = {
+        'Host': "twitter.com",
+        'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0",
+        'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        'Accept-Language': "en-US,en;q=0.5",
+        'Connection': "keep-alive"}
 
-def create_query(screen_name=None, maxTweets=None, since=None, until=None, querySearch='',
-                 topTweets=False, near=None, within=None, cookies=None):
+    return headers
+
+def create_tweet_query(screen_name=None, maxTweets=None, since=None, until=None, querySearch='',
+                       topTweets=False, near=None, within=None, cookies=None):
     parameters_url = (
         ('', querySearch),
         (' from:', screen_name),
@@ -31,19 +41,12 @@ def create_query(screen_name=None, maxTweets=None, since=None, until=None, query
         if i[1] is not None:
             url += i[0] + i[1]
 
-    headers = {
-        'Host': "twitter.com",\
-        'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0",\
-        'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",\
-        'Accept-Language': "en-US,en;q=0.5", \
-        'Connection': "keep-alive" }    
-
     maxTweets = maxTweets
     topTweets = topTweets
     cookieJar = cookies
 
     query = {
-        'headers': headers,
+        'headers': get_headers(),
         'url': url,
         'maxTweets': maxTweets,
         'topTweets': topTweets,
@@ -51,6 +54,17 @@ def create_query(screen_name=None, maxTweets=None, since=None, until=None, query
     }
 
     return query
+
+def create_task(query, saveParam, type):
+    return json.dumps({
+        'query_param': query,
+        'save_param': saveParam,
+        'type': type
+    })
+
+
+def create_profile_query(screenname):
+    pass
 
 
 def parse_location(geo):
@@ -70,7 +84,9 @@ def date_range(start, end, delta):
 
 
 def create_tasks(queries, saveParam):
-    tasks = []
+    tweet_tasks = []
+    profile_tasks = []
+    names = {}
     for q in queries:
         print(q)
         maxTweets = q['maxTweets'] if ('maxTweets' in q) else None
@@ -84,6 +100,7 @@ def create_tasks(queries, saveParam):
             a.append([('geo', geo) for geo in q['locations']])
         if 'screen_name' in q:
             a.append([('screen_name', geo) for geo in q['screen_name']])
+            names |= set(q['screen_name'])
 
         since = datetime.datetime.strptime(q['since'], '%Y-%m-%d') \
             if ('since' in q) \
@@ -97,11 +114,9 @@ def create_tasks(queries, saveParam):
         intervals = [('interval', (d1, d2)) for d1, d2 in zip(dates[:-1], dates[1:])]
         a.append(intervals)
 
-        params = itertools.product(*a)
-
-        for element in params:
+        for element in itertools.product(*a):
             p = dict([(a, b) for a, b in element])
-            mes = create_query(
+            query = create_tweet_query(
                 screen_name=p.get('screen_name'),
                 near=parse_location(p.get('geo')),
                 within=str(p['geo']['radius']) + 'km' if 'geo' in p else None,
@@ -111,9 +126,11 @@ def create_tasks(queries, saveParam):
                 querySearch=p['querySearch'] if 'querySearch' in p else '',
                 topTweets=topTweets)
 
-            tasks.append(json.dumps({
-                'query_param': mes,
-                'save_param': saveParam
-            }))
+            tweet_tasks.append(create_task(query=query,
+                                           saveParam=saveParam,
+                                           type='tweets'))
 
-    return tasks
+        for name in names:
+            pass
+
+    return tweet_tasks
