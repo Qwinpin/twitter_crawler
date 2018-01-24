@@ -239,7 +239,7 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
 
     return results, 0, cookieJar
 
-def parse_man(parameters):
+def parse_profile(parameters):
     logger = logging.getLogger("crawler_log.profile_parse")
     fh = logging.FileHandler("log.log")
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -252,7 +252,7 @@ def parse_man(parameters):
                                 headers=parameters['headers'])
     except:
         logger.error('Request error with code:' + str(response.status_code))
-        return results, 'err_request', cookieJar
+        return profile, 'err_request', cookieJar
 
     page = PyQuery(response.content)
     id_str = page('div.ProfileNav').attr('data-user-id')

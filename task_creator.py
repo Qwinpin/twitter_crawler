@@ -3,7 +3,8 @@ import json
 import itertools
 import datetime
 
-#TODO header generator
+
+# TODO header generator
 def get_headers():
     headers = {
         'Host': "twitter.com",
@@ -13,6 +14,7 @@ def get_headers():
         'Connection': "keep-alive"}
 
     return headers
+
 
 def create_tweet_query(screen_name=None, maxTweets=None, since=None, until=None, querySearch='',
                        topTweets=False, near=None, within=None, cookies=None):
@@ -55,7 +57,8 @@ def create_tweet_query(screen_name=None, maxTweets=None, since=None, until=None,
 
     return query
 
-def create_task(query, saveParam, type, recursion):
+
+def create_task(query, type, recursion, saveParam=None):
     return json.dumps({
         'query_param': query,
         'save_param': saveParam,
@@ -68,13 +71,6 @@ def create_profile_query(screenname):
     return {'headers': get_headers(),
             'url': 'https://twitter.com/' + screenname
             }
-
-def create_profile_task(query, type, recursion):
-    return json.dumps({
-        'query_param': query,
-        'type': type,
-        'recursion': recursion
-    })
 
 
 def parse_location(geo):
@@ -97,14 +93,13 @@ def date_range(start, end, delta):
     yield end
 
 
-def create_tasks(queries, saveParam):
+def create_tasks(queries, saveParam, days_interval=3):
     tweet_tasks = []
-    profile_tasks = []
-    names = {}
+    profiles = []
     for q in queries:
         print(q)
-        maxTweets = getattr(q, 'maxTweets')
-        topTweets = getattr(q, 'topTweets')
+        maxTweets = getattr(q, 'maxTweets', None)
+        topTweets = getattr(q, 'topTweets', None)
         recursion = getattr(q, 'recursion', 0)
 
         a = []
@@ -112,10 +107,10 @@ def create_tasks(queries, saveParam):
             a.append([('querySearch', geo) for geo in q['querySearch']])
         if 'locations' in q:
             a.append([('geo', geo) for geo in q['locations']])
+
         if 'screen_name' in q:
-            a.append([('screen_name', geo) for geo in q['screen_name']])
-            #names |= set(q['screen_name'])
-            names = [n for n in q['screen_name']]
+            a.append([('screen_name', name) for name in q['screen_name']])
+            profiles += q['screen_name']
 
         now = datetime.datetime.today()
         since = datetime.datetime.strptime(q['since'], '%Y-%m-%d') \
@@ -126,7 +121,7 @@ def create_tasks(queries, saveParam):
             if ('until' in q) \
             else now
 
-        dates = list(map(lambda d: str(d.date()), date_range(since, until, datetime.timedelta(weeks=1))))
+        dates = list(map(lambda d: str(d.date()), date_range(since, until, datetime.timedelta(days=days_interval))))
         intervals = [('interval', (d1, d2)) for d1, d2 in zip(dates[:-1], dates[1:])]
         a.append(intervals)
 
@@ -146,12 +141,11 @@ def create_tasks(queries, saveParam):
                                            type='tweets',
                                            recursion=recursion))
 
-        for name in names:
-            profile_query = create_profile_query(
-                screenname=name
-            )
-            profile_tasks.append(create_profile_task(query = profile_query,
-                                            type='profile',
-                                            recursion=recursion))
+    profile_tasks = []
+    for name in set(profiles):
+        profile_query = create_profile_query(screenname=name)
+        profile_tasks.append(create_task(query=profile_query,
+                                         type='profile',
+                                         recursion=recursion))
 
     return tweet_tasks + profile_tasks

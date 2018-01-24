@@ -1,15 +1,14 @@
 [{
-<<<<<<< Updated upstream
-   "screen_name": ["xbox", "kremlinrussia"],
+   "screen_name": ["xbox"],
    "maxTweets": 100,
    "since": "2017-01-01",
    "until": "2018-01-01",
-   "querySearch": ["Россия", "game"],
+   "querySearch": ["one", "game"],
    "topTweets": false,
    "recursion": 1
 },
 {
-   "screen_name": ["fondskolkovo"],
+   "screen_name": ["fondskolkovo", "kremlinrussia"],
    "maxTweets": 200,
    "since": "2017-08-15",
    "until": "2018-01-01",
@@ -30,7 +29,7 @@
          "radius": 50
       },
       {
-         "city": "Saint-Peterburg",
+         "city": "Saint-Petersburg",
          "county": "Russia",
          "radius": 100
       }
@@ -38,8 +37,3 @@
    "recursion": 1
 }
 ]
-=======
-   "until": "2018-01-08",
-   "querySearch": ["Уфа", "хоккей"]
-}]
->>>>>>> Stashed changes

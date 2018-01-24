@@ -1,8 +1,12 @@
 
 *.pyc
 
-*.csv
 .idea/
+
+*.log
+
+*.db
+*.csv
 
 \.vscode/launch\.json
 
