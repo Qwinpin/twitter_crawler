@@ -14,14 +14,16 @@ class Producer:
         self.port = port
 
     def run(self, clear_queue):
+
         credentials = pika.PlainCredentials(self.login, self.password)
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
             host=self.host, credentials=credentials, heartbeat=60*60))
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue='task_queue', durable=True)
-
         if clear_queue:
             self.channel.queue_delete(queue='task_queue')
+
+        self.channel.queue_declare(queue='task_queue', durable=True)
+
 
     def stop(self):
         self.connection.close()
@@ -45,7 +47,7 @@ if __name__ == '__main__':
                             default='save_settings.json', dest="save_set_file", type=str)
 
         parser.add_argument('-cq', '--clear_queue', help='Clear queue',
-                            default=False, dest="cq", type=bool)
+                            default=True, dest="cq", type=bool)
         args_c = parser.parse_args()
 
         query = json.load(open(args_c.query_file))

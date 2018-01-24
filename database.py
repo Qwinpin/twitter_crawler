@@ -34,7 +34,7 @@ class SQLite3(DataBase):
         self.cursor = self.db.cursor()
     
     def save_tweets(self, tweets, query):
-        for row in tqdm(tweets):
+        for row in tweets:
             try:
                 self.cursor.execute('''INSERT INTO tweets(id_str, screenname, created_at, text, \
                     url, reply_to, favorites, replies, retweets, likes_users, retweet_users, pic)
@@ -52,7 +52,7 @@ class SQLite3(DataBase):
         self.db.commit()
 
     def save_profile(self, profile, query):
-        for row in tqdm([profile]):
+        for row in [profile]:
             try:
                 self.cursor.execute('''INSERT INTO profiles(id_str, screenname, name, tweets_number, followers_number, \
                     following_number, favorites_number, bio, place, place_id, site, birth, creation)

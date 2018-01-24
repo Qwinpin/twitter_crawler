@@ -5,7 +5,6 @@ import datetime
 from fake_useragent import UserAgent
 
 
-# TODO header generator
 def get_headers():
     ua = UserAgent()
     headers = {
@@ -96,7 +95,7 @@ def date_range(start, end, delta):
     yield end
 
 
-def create_tasks(queries, saveParam, days_interval=3):
+def create_tasks(queries, saveParam, days_interval=1):
     tweet_tasks = []
     profiles = []
     for q in queries:
@@ -125,7 +124,8 @@ def create_tasks(queries, saveParam, days_interval=3):
             else now
 
         dates = list(map(lambda d: str(d.date()), date_range(since, until, datetime.timedelta(days=days_interval))))
-        intervals = [('interval', (d1, d2)) for d1, d2 in zip(dates[:-1], dates[1:])]
+        print (dates)
+        intervals = [('interval', (d1, d2)) for d1, d2 in zip(dates[0::2], dates[1::2])]
         a.append(intervals)
 
         for element in itertools.product(*a):
