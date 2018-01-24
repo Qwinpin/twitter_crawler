@@ -4,7 +4,8 @@ import itertools
 import datetime
 from fake_useragent import UserAgent
 
-#TODO header generator
+
+# TODO header generator
 def get_headers():
     ua = UserAgent()
     headers = {
@@ -16,6 +17,7 @@ def get_headers():
         'Connection': "close"}
 
     return headers
+
 
 def create_tweet_query(screen_name=None, maxTweets=None, since=None, until=None, querySearch='',
                        topTweets=False, near=None, within=None, cookies=None):
@@ -58,7 +60,8 @@ def create_tweet_query(screen_name=None, maxTweets=None, since=None, until=None,
 
     return query
 
-def create_task(query, saveParam, type, recursion):
+
+def create_task(query, type, recursion, saveParam=None):
     return json.dumps({
         'query_param': query,
         'save_param': saveParam,
@@ -72,20 +75,17 @@ def create_profile_query(screenname):
             'url': 'https://twitter.com/' + screenname
             }
 
-def create_profile_task(query, type, recursion):
-    return json.dumps({
-        'query_param': query,
-        'type': type,
-        'recursion': recursion
-    })
-
 
 def parse_location(geo):
     if geo is None:
         return None
-    lon = geo["lon"] if "lon" in geo else 0
-    lat = geo["lat"] if "lat" in geo else 0
-    return ",".join([str(lon), str(lat)])
+    lon = getattr(geo, "lon", 0)
+    lat = getattr(geo, "lat", 0)
+    city = getattr(geo, "city", '')
+    country = getattr(geo, "country", '')
+    return ",".join([city, country]) \
+        if "city" in geo or "country" in geo \
+        else ",".join([str(lon), str(lat)])
 
 
 def date_range(start, end, delta):
@@ -96,27 +96,26 @@ def date_range(start, end, delta):
     yield end
 
 
-def create_tasks(queries, saveParam):
+def create_tasks(queries, saveParam, days_interval=3):
     tweet_tasks = []
-    profile_tasks = []
-    names = {}
+    profiles = []
     for q in queries:
         print(q)
-        maxTweets = q['maxTweets'] if ('maxTweets' in q) else None
-        now = datetime.datetime.today()
-        topTweets = q['topTweets'] if 'topTweets' in q else None
-        recursion = q['recursion'] if 'recursion' in q else 0
+        maxTweets = getattr(q, 'maxTweets', None)
+        topTweets = getattr(q, 'topTweets', None)
+        recursion = getattr(q, 'recursion', 0)
 
         a = []
         if 'querySearch' in q:
             a.append([('querySearch', geo) for geo in q['querySearch']])
         if 'locations' in q:
             a.append([('geo', geo) for geo in q['locations']])
-        if 'screen_name' in q:
-            a.append([('screen_name', geo) for geo in q['screen_name']])
-            #names |= set(q['screen_name'])
-            names = [n for n in q['screen_name']]
 
+        if 'screen_name' in q:
+            a.append([('screen_name', name) for name in q['screen_name']])
+            profiles += q['screen_name']
+
+        now = datetime.datetime.today()
         since = datetime.datetime.strptime(q['since'], '%Y-%m-%d') \
             if ('since' in q) \
             else now - datetime.timedelta(weeks=4 * 6)
@@ -125,7 +124,7 @@ def create_tasks(queries, saveParam):
             if ('until' in q) \
             else now
 
-        dates = list(map(lambda d: str(d.date()), date_range(since, until, datetime.timedelta(weeks=1))))
+        dates = list(map(lambda d: str(d.date()), date_range(since, until, datetime.timedelta(days=days_interval))))
         intervals = [('interval', (d1, d2)) for d1, d2 in zip(dates[:-1], dates[1:])]
         a.append(intervals)
 
@@ -145,12 +144,11 @@ def create_tasks(queries, saveParam):
                                            type='tweets',
                                            recursion=recursion))
 
-        for name in names:
-            profile_query = create_profile_query(
-                screenname=name
-            )
-            profile_tasks.append(create_profile_task(query = profile_query,
-                                            type='profile',
-                                            recursion=recursion))
+    profile_tasks = []
+    for name in set(profiles):
+        profile_query = create_profile_query(screenname=name)
+        profile_tasks.append(create_task(query=profile_query,
+                                         type='profile',
+                                         recursion=recursion))
 
     return tweet_tasks + profile_tasks
