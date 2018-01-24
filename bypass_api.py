@@ -156,6 +156,7 @@ def parse_reply(data, parameters, save_settings):
             try:
                 reply_tweets = PyQuery(reply_json['items_html'])('div.js-stream-tweet')
             except:
+                logger.info(reply_tweets)
                 logger.error('Parse error')
 
         for reply_tweetHTML in reply_tweets:
