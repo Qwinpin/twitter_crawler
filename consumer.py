@@ -56,10 +56,11 @@ class Worker:
         fh.setFormatter(formatter)
         logger.addHandler(fh)
         credentials = pika.PlainCredentials(self.login, self.password)
-        parameters = pika.ConnectionParameters(self.host,
-                                               self.port,
-                                               '/',
-                                               credentials)
+        parameters = pika.ConnectionParameters(host=self.host,
+                                               port=self.port,
+                                               virtual_host='/',
+                                               credentials=credentials,
+                                               heartbeat=60*60)
         try:
             connection = pika.BlockingConnection(parameters)
         except pika.exceptions.ConnectionClosed:

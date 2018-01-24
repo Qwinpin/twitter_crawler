@@ -15,7 +15,7 @@ class Producer:
     def run(self):
         credentials = pika.PlainCredentials(self.login, self.password)
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host=self.host, credentials=credentials))
+            host=self.host, credentials=credentials, heartbeat=60*60))
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue='task_queue', durable=True)
 
