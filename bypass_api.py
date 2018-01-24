@@ -73,7 +73,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     retweet_cookieJar = requests.cookies.RequestsCookieJar()
     try:
         retweet_response = requests.get((retweet_url), cookies=retweet_cookieJar,
-                            headers=retweet_headers)
+            headers=retweet_headers)
     except:
         logger.error('Request (retweets) error with code:' + str(retweet_response.status_code))
         retweet_users = []
