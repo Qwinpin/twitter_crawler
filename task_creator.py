@@ -111,7 +111,8 @@ def create_tasks(queries, saveParam):
             a.append([('geo', geo) for geo in q['locations']])
         if 'screen_name' in q:
             a.append([('screen_name', geo) for geo in q['screen_name']])
-            names |= set(q['screen_name'])
+            #names |= set(q['screen_name'])
+            names = [n for n in q['screen_name']]
 
         since = datetime.datetime.strptime(q['since'], '%Y-%m-%d') \
             if ('since' in q) \

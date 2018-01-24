@@ -30,18 +30,18 @@ class Worker:
         print(os.getpid(), "crawled", len(allData), "tweets")
 
     def crawl_profile(self, task):
-        allData = []
         data, err, cook = ba.parse_man(task['query_param'])
-        self.db.save_profile(allData, task['query_param'])
-        print(os.getpid(), "crawled", len(allData), "profiles")
+        self.db.save_profile(data, task['query_param'])
+        print(os.getpid(), "crawled", len(data), "profiles")
 
     def callback(self, ch, method, properties, body):
         task = json.loads(body.decode('utf-8'))
         print(" [x] Received ", task)
         try:
-            if task[type] == "tweets":
-                self.crawl_tweets(task)
-            elif task[type] == "profile":
+            if task['type'] == "tweets":
+                pass
+                #self.crawl_tweets(task)
+            elif task['type'] == "profile":
                 self.crawl_profile(task)
         except:
             pass
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
-    logger.error("Start crawler")
+    logger.info("Start crawler")
     
     parser = argparse.ArgumentParser(description='Crawler')
     parser.add_argument('-cq', '--clear_queue', help='Clear queue', default=False, dest="cq", type=bool)

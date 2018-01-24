@@ -220,6 +220,9 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
             if data.reply != 0:
                 for reply_data in parse_reply(data, parameters, save_settings):
                     results.append(reply_data)
+                    if parameters['maxTweets'] is not None:
+                        if 0 < parameters['maxTweets'] <= len(results):
+                            break
 
             if receiveBuffer and len(resultsAux) >= bufferLength:
                 receiveBuffer(resultsAux)
@@ -245,7 +248,7 @@ def parse_man(parameters):
     profile = {}
     cookieJar = requests.cookies.RequestsCookieJar()
     try:
-        response = requests.get((parameters['url'] + refreshCursor), cookies=cookieJar,
+        response = requests.get((parameters['url']), cookies=cookieJar,
                                 headers=parameters['headers'])
     except:
         logger.error('Request error with code:' + str(response.status_code))
@@ -266,19 +269,19 @@ def parse_man(parameters):
     birth = page('span.ProfileHeaderCard-birthdateText').text()
     creation = page('span.ProfileHeaderCard-joinDateText').attr('title')
     #media_number = re.sub(r"\D+", '', page('span.PhotoRail-headingText').text())
-    profile.screenname = screenname
-    profile.id_str = id_str
-    profile.name = name
-    profile.tweets_number = tweets_number
-    profile.followers_number = followers_number
-    profile.following_number = following_number
-    profile.favorites_number = favorites_number
-    profile.bio = bio
-    profile.place = place
-    profile.place_id = place_id
-    profile.site = site
-    profile.birth = birth
-    profile.creation = creation
+    profile['screenname'] = screenname
+    profile['id_str'] = id_str
+    profile['name'] = name
+    profile['tweets_number'] = tweets_number
+    profile['followers_number']= followers_number
+    profile['following_number'] = following_number
+    profile['favorites_number'] = favorites_number
+    profile['bio'] = bio
+    profile['place'] = place
+    profile['place_id'] = place_id
+    profile['site'] = site
+    profile['birth'] = birth
+    profile['creation'] = creation
     return profile, 0, cookieJar
 
 # for future, return sets of date-range, like [(2016-12-12, 2016-12-24), (2016-12-24, 2016-12-31)]

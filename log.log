@@ -1,5 +1,1 @@
-2018-01-24 02:49:04,799 - crawler_log - ERROR - Start crawler
-2018-01-24 02:49:07,183 - crawler_log.connections.add - ERROR - Connection (pika) failed
-2018-01-24 02:49:07,188 - crawler_log.connections.add - ERROR - Connection (pika) failed
-2018-01-24 02:49:07,211 - crawler_log.connections.add - ERROR - Connection (pika) failed
-2018-01-24 02:49:07,218 - crawler_log.connections.add - ERROR - Connection (pika) failed
+2018-01-24 13:58:13,652 - crawler_log - INFO - Start crawler
