@@ -1,23 +1,27 @@
 import pika
 import sys
 import json
+import argparse
 
 from task_creator import create_tasks
 
 
 class Producer:
-    def __init__(self, host, port=5672, login='serv', password='1234'):
+    def __init__(self, host, port=5672, login='guest', password='guest'):
         self.login = login
         self.password = password
         self.host = host
         self.port = port
 
-    def run(self):
+    def run(self, clear_queue):
         credentials = pika.PlainCredentials(self.login, self.password)
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
             host=self.host, credentials=credentials, heartbeat=60*60))
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue='task_queue', durable=True)
+
+        if clear_queue:
+            self.channel.queue_delete(queue='task_queue')
 
     def stop(self):
         self.connection.close()
@@ -31,24 +35,25 @@ class Producer:
             print(" [x] Sent %r" % (task,))
 
 
-def read_query(filename):
-    return json.load(open(filename))
-
-
-def parse_argv(argv):
-    if len(argv) != 2:
-        raise Exception('Two input settings files are required')
-
-    return read_query(argv[0]), read_query(argv[1])
-
-
 if __name__ == '__main__':
-    p = Producer('localhost')
-    p.run()
     try:
-        # query = parse_argv(sys.argv[1:])
-        query, saveSet = parse_argv(['query.json', 'save_settings.json'])
+        parser = argparse.ArgumentParser(description='Crawler')
+        parser.add_argument('-q', '--query', help='Search query json file',
+                            default='query.json', dest="query_file", type=str)
+
+        parser.add_argument('-s', '--save_set', help='Save settings json file',
+                            default='save_settings.json', dest="save_set_file", type=str)
+
+        parser.add_argument('-cq', '--clear_queue', help='Clear queue',
+                            default=False, dest="cq", type=bool)
+        args_c = parser.parse_args()
+
+        query = json.load(open(args_c.query_file))
+        saveSet = json.load(open(args_c.save_set_file))
         tasks = create_tasks(query, saveSet)
+
+        p = Producer('localhost')
+        p.run(args_c.cq)
         p.send_tasks(tasks)
         p.stop()
 
