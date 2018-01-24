@@ -27,6 +27,11 @@
          "lat": 37.97669253,
          "lon": -122.216751122,
          "radius": 50
+      },
+      {
+         "city": "Saint-Peterburg",
+         "county": "Russia",
+         "radius": 100
       }
    ],
    "recursion": 1

@@ -71,9 +71,13 @@ def create_profile_query(screenname):
 def parse_location(geo):
     if geo is None:
         return None
-    lon = geo["lon"] if "lon" in geo else 0
-    lat = geo["lat"] if "lat" in geo else 0
-    return ",".join([str(lon), str(lat)])
+    lon = getattr(geo, "lon", 0)
+    lat = getattr(geo, "lat", 0)
+    city = getattr(geo, "city", '')
+    country = getattr(geo, "country", '')
+    return ",".join([city, country]) \
+        if "city" in geo or "country" in geo \
+        else ",".join([str(lon), str(lat)])
 
 
 def date_range(start, end, delta):
@@ -90,10 +94,9 @@ def create_tasks(queries, saveParam):
     names = {}
     for q in queries:
         print(q)
-        maxTweets = q['maxTweets'] if ('maxTweets' in q) else None
-        now = datetime.datetime.today()
-        topTweets = q['topTweets'] if 'topTweets' in q else None
-        recursion = q['recursion'] if 'recursion' in q else 0
+        maxTweets = getattr(q, 'maxTweets')
+        topTweets = getattr(q, 'topTweets')
+        recursion = getattr(q, 'recursion', 0)
 
         a = []
         if 'querySearch' in q:
@@ -104,6 +107,7 @@ def create_tasks(queries, saveParam):
             a.append([('screen_name', geo) for geo in q['screen_name']])
             names |= set(q['screen_name'])
 
+        now = datetime.datetime.today()
         since = datetime.datetime.strptime(q['since'], '%Y-%m-%d') \
             if ('since' in q) \
             else now - datetime.timedelta(weeks=4 * 6)
