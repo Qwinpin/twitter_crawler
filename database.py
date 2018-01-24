@@ -1,6 +1,7 @@
 import csv
 import sqlite3 as sql
 from tqdm import tqdm
+import logging
 
 class DataBase:
     def save_tweets(self, tweets, query):
@@ -23,6 +24,11 @@ class CsvDB(DataBase):
 
 class SQLite3(DataBase):
     def __init__(self, filename):
+        self.logger = logging.getLogger("crawler_log.database")
+        fh = logging.FileHandler("log.log")
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        self.logger.addHandler(fh)
         self.table = filename
         self.db = sql.connect('.//twitter.db')
         self.cursor = self.db.cursor()
@@ -41,8 +47,19 @@ class SQLite3(DataBase):
                     row.pic
                 ))
             except sql.IntegrityError as e:
+                self.logger.error('INSERT INTO tweets error')
                 self.db.rollback()
         self.db.commit()
 
-    def save_profile(self, profile):
-        pass
+    def save_profile(self, profile, query):
+        for row in tqdm([profile]):
+            try:
+                self.cursor.execute('''INSERT INTO profiles(id_str, screenname, name, tweets_number, followers_number, \
+                    following_number, favorites_number, bio, place, place_id, site, birth, creation)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (row.id_str, row.screenname, row.name, row.tweets_number, row.followers_number, \
+                    row.following_number, row.favorites_number, row.bio, row.place, row.place_id, row.site, row.birth, row.creation
+                ))
+            except sql.IntegrityError as e:
+                self.logger.error('INSERT INTO profiles error')
+                self.db.rollback()
+        self.db.commit()

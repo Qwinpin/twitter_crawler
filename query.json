@@ -1,4 +1,5 @@
 [{
+<<<<<<< Updated upstream
    "screen_name": ["xbox", "kremlinrussia"],
    "maxTweets": 100,
    "since": "2017-01-01",
@@ -37,3 +38,8 @@
    "recursion": 1
 }
 ]
+=======
+   "until": "2018-01-08",
+   "querySearch": ["Уфа", "хоккей"]
+}]
+>>>>>>> Stashed changes

@@ -2,7 +2,7 @@ import re
 import datetime
 from pyquery import PyQuery
 import requests
-
+import logging
 
 class Tweet:
     def __init__(self, save_settings):
@@ -19,6 +19,11 @@ class Tweet:
                          if self.save_settings[field]])
 
 def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
+    logger = logging.getLogger("crawler_log.parse_page")
+    fh = logging.FileHandler("log.log")
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
     tweetPQ = PyQuery(tweetHTML)
     tweet = Tweet(save_settings)
     usernameTweet = tweetPQ("span:first.username.u-dir b").text()
@@ -30,6 +35,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     try:
         dateSec = int(tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
     except:
+        logger.error('Timestamp error')
         dateSec = 0
     ids = tweetPQ.attr("data-tweet-id")
     permalink = tweetPQ.attr("data-permalink-path")
@@ -49,12 +55,17 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
         likes_response = requests.get((likes_url), cookies=likes_cookieJar,
                             headers=likes_headers)
     except:
+        logger.error('Request (likes) error with code:' + str(likes_response.status_code))
         likes_users = []
     else:
-        likes = PyQuery(likes_response.json()['htmlUsers'])('ol')
-        for i in likes[0]:
-            likes_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
-                                PyQuery(i)('div.account').attr('data-name')})
+        try:
+            likes = PyQuery(likes_response.json()['htmlUsers'])('ol')
+        except:
+            logger.error('Response without json content:' + str(likes_response.url))
+        else: 
+            for i in likes[0]:
+                likes_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
+                                    PyQuery(i)('div.account').attr('data-name')})
     retweet_users = []
     retweet_url = 'https://twitter.com/i/activity/retweeted_popup?id=' + str(ids)
     retweet_headers = parameters['headers']
@@ -62,14 +73,19 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     retweet_cookieJar = requests.cookies.RequestsCookieJar()
     try:
         retweet_response = requests.get((retweet_url), cookies=retweet_cookieJar,
-                            headers=retweet_headers)
+            headers=retweet_headers)
     except:
+        logger.error('Request (retweets) error with code:' + str(retweet_response.status_code))
         retweet_users = []
     else:
-        retweet = PyQuery(retweet_response.json()['htmlUsers'])('ol')
-        for i in retweet[0]:
-            retweet_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
-                                PyQuery(i)('div.account').attr('data-name')})
+        try:
+            retweet = PyQuery(retweet_response.json()['htmlUsers'])('ol')
+        except:
+            logger.error('Response without json content:' + str(retweet_response.url))
+        else:
+            for i in retweet[0]:
+                retweet_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
+                                    PyQuery(i)('div.account').attr('data-name')})
 
     tweet.id_str = ids
     tweet.permalink = 'https://twitter.com' + permalink
@@ -92,6 +108,11 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     return tweet
 
 def parse_reply(data, parameters, save_settings):
+    logger = logging.getLogger("crawler_log.parse_reply")
+    fh = logging.FileHandler("log.log")
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
     reply_refreshCursor = ''
     reply_url ='https://twitter.com/' + data.screenname + '/status/' + data.id_str + '?conversation_id=' + data.id_str
     reply_headers = parameters['headers']
@@ -102,6 +123,7 @@ def parse_reply(data, parameters, save_settings):
         reply_response = requests.get((reply_url), cookies=reply_cookieJar,
                                 headers=reply_headers)
     except:
+        logger.error('Request error with code:' + str(reply_response.status_code))
         reply_tweets = []
         reply_active = False
     else:
@@ -121,13 +143,11 @@ def parse_reply(data, parameters, save_settings):
             try:
                 reply_json = reply_response.json()
             except:
+                logger.error('Response without json content:' + str(reply_response.url))
                 break
             
-            try:
-                if len(reply_json['items_html'].strip()) == 0:
-                    reply_tweets = []
-            except:
-                break
+            if len(reply_json['items_html'].strip()) == 0:
+                reply_tweets = []
 
             reply_refreshCursor = reply_json['min_position']
             if reply_refreshCursor is None:
@@ -136,7 +156,7 @@ def parse_reply(data, parameters, save_settings):
             try:
                 reply_tweets = PyQuery(reply_json['items_html'])('div.js-stream-tweet')
             except:
-                pass
+                logger.error('Parse error')
 
         for reply_tweetHTML in reply_tweets:
             reply_data = parse_page(reply_tweetHTML, parameters, save_settings, data.id_str)
@@ -149,11 +169,17 @@ def parse_reply(data, parameters, save_settings):
             reply_response = requests.get((reply_url), cookies=reply_cookieJar,
                             headers=reply_headers)
         except:
+            logger.error('Request error with code:' + str(reply_response.status_code))
             break
 
 
 # parse json data, refresh 'page' to download new tweets
 def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy=None):
+    logger = logging.getLogger("crawler_log.main_parse")
+    fh = logging.FileHandler("log.log")
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
     refreshCursor = ''
     results = []
     resultsAux = []
@@ -169,10 +195,13 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
             response = requests.get((parameters['url'] + refreshCursor), cookies=cookieJar,
                                     headers=parameters['headers'])
         except:
+            logger.error('Request error with code:' + str(response.status_code))
             return results, 'err_request', cookieJar
+        
         try:
             json = response.json()
         except:
+            logger.error('Response without json content:' + str(response.url))
             json = {'items_html': ''}
 
         if len(json['items_html'].strip()) == 0:
@@ -191,6 +220,9 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
             if data.reply != 0:
                 for reply_data in parse_reply(data, parameters, save_settings):
                     results.append(reply_data)
+                    if parameters['maxTweets'] is not None:
+                        if 0 < parameters['maxTweets'] <= len(results):
+                            break
 
             if receiveBuffer and len(resultsAux) >= bufferLength:
                 receiveBuffer(resultsAux)
@@ -207,6 +239,50 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
 
     return results, 0, cookieJar
 
+def parse_man(parameters):
+    logger = logging.getLogger("crawler_log.profile_parse")
+    fh = logging.FileHandler("log.log")
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    profile = {}
+    cookieJar = requests.cookies.RequestsCookieJar()
+    try:
+        response = requests.get((parameters['url']), cookies=cookieJar,
+                                headers=parameters['headers'])
+    except:
+        logger.error('Request error with code:' + str(response.status_code))
+        return results, 'err_request', cookieJar
+
+    page = PyQuery(response.content)
+    id_str = page('div.ProfileNav').attr('data-user-id')
+    screenname = page('div.user-actions').attr('data-screen-name')
+    name = page('div.user-actions').attr('data-name')
+    tweets_number = page('li.ProfileNav-item--tweets')('span.ProfileNav-value').attr('data-count')
+    followers_number = page('li.ProfileNav-item--followers')('span.ProfileNav-value').attr('data-count')
+    following_number = page('li.ProfileNav-item--following')('span.ProfileNav-value').attr('data-count')
+    favorites_number = page('li.ProfileNav-item--following')('span.ProfileNav-value').attr('data-count')
+    bio = page('p.ProfileHeaderCard-bio').text()
+    place = page('div.ProfileHeaderCard-location').text()
+    place_id = page('span.ProfileHeaderCard-locationText')('a').attr('data-place-id')
+    site = page('span.ProfileHeaderCard-urlText').text()
+    birth = page('span.ProfileHeaderCard-birthdateText').text()
+    creation = page('span.ProfileHeaderCard-joinDateText').attr('title')
+    #media_number = re.sub(r"\D+", '', page('span.PhotoRail-headingText').text())
+    profile['screenname'] = screenname
+    profile['id_str'] = id_str
+    profile['name'] = name
+    profile['tweets_number'] = tweets_number
+    profile['followers_number']= followers_number
+    profile['following_number'] = following_number
+    profile['favorites_number'] = favorites_number
+    profile['bio'] = bio
+    profile['place'] = place
+    profile['place_id'] = place_id
+    profile['site'] = site
+    profile['birth'] = birth
+    profile['creation'] = creation
+    return profile, 0, cookieJar
 
 # for future, return sets of date-range, like [(2016-12-12, 2016-12-24), (2016-12-24, 2016-12-31)]
 def date_prepare(parameters):

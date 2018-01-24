@@ -3,6 +3,7 @@ import json
 import os
 import argparse
 from multiprocessing import Process
+import logging
 
 import bypass_api as ba
 from database import CsvDB, SQLite3
@@ -29,15 +30,18 @@ class Worker:
         print(os.getpid(), "crawled", len(allData), "tweets")
 
     def crawl_profile(self, task):
-        pass
+        data, err, cook = ba.parse_man(task['query_param'])
+        self.db.save_profile(data, task['query_param'])
+        print(os.getpid(), "crawled", len(data), "profiles")
 
     def callback(self, ch, method, properties, body):
         task = json.loads(body.decode('utf-8'))
         print(" [x] Received ", task)
         try:
-            if task[type] == "tweets":
-                self.crawl_tweets(task)
-            elif task[type] == "profile":
+            if task['type'] == "tweets":
+                pass
+                #self.crawl_tweets(task)
+            elif task['type'] == "profile":
                 self.crawl_profile(task)
         except:
             pass
@@ -46,12 +50,21 @@ class Worker:
 
 
     def run(self, clear_queue):
+        logger = logging.getLogger("crawler_log.connections")
+        fh = logging.FileHandler("log.log")
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
         credentials = pika.PlainCredentials(self.login, self.password)
         parameters = pika.ConnectionParameters(self.host,
                                                self.port,
                                                '/',
                                                credentials)
-        connection = pika.BlockingConnection(parameters)
+        try:
+            connection = pika.BlockingConnection(parameters)
+        except pika.exceptions.ConnectionClosed:
+            logger.error('Connection (pika) failed')
+            raise
         channel = connection.channel()
 
         # раскоментируй этот делит если в очереди образауются задачи которые 
@@ -74,6 +87,14 @@ def run_worker(host, file, clear_queue):
 
 
 if __name__ == '__main__':
+    logger = logging.getLogger("crawler_log")
+    logger.setLevel(logging.INFO)
+    fh = logging.FileHandler("log.log")
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    logger.info("Start crawler")
+    
     parser = argparse.ArgumentParser(description='Crawler')
     parser.add_argument('-cq', '--clear_queue', help='Clear queue', default=False, dest="cq", type=bool)
     parser.add_argument('-w', '--workers', help='Set number of workers', default=4, type=int, dest="workers_num")

@@ -1,14 +1,42 @@
-Twitter crawler
+# ![logo](./logo_mini.png) Twitter crawler
 
-off_api - default and official Twitter API, use only for lightweight task: get less than 3200 tweets, get meta-info like followes, friends
-WARN: dont forget to use your keys and secret for api auth (actually is used AppAuth for additional number of available queries: 450 against 180 in user auth)
+ Python-based crawler for tweets and profiles:
 
-bypass_api - use for heavy and more flexible requests: get all user's tweets, search-requests for high-popular event et al
+1. **Without limitations** of the official API
+2. Distributed
+3. Support for recursive crawling
+4. **Flexible query**
+
+Supported collecting:
+
+1. Tweets:
+   1. Text
+   2. Id, Screen name
+   3. Retweets
+   4. Favorites
+   5. Replies
+   6. Geo
+2. Profiles:
+   1. Id, Screen name, Name
+   2. Date of creation
+   3. Date of birthday
+   4. Bio
+   5. Place
+   6. Site
+   7. Followers, followings, favorites (just numbers)
 
 Requirements:
- - Python 2.7/3.6
- - PyQuery
- - pika
- - rabbitmq-server
- - sqlite3
- - Tweepy - https://github.com/tweepy/tweepy
+
+1. Python 2.7/3.*
+2. pyquery
+3. pika
+4. rabbitmq-server
+
+## Installation:
+
+TODO
+
+## How to
+
+TODO
+
