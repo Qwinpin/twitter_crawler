@@ -21,7 +21,7 @@ class Tweet:
 def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     logger = logging.getLogger("crawler_log.parse_page")
     fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     tweetPQ = PyQuery(tweetHTML)
@@ -110,7 +110,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
 def parse_reply(data, parameters, save_settings):
     logger = logging.getLogger("crawler_log.parse_reply")
     fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     reply_refreshCursor = ''
@@ -177,7 +177,7 @@ def parse_reply(data, parameters, save_settings):
 def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy=None):
     logger = logging.getLogger("crawler_log.main_parse")
     fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     refreshCursor = ''
@@ -218,11 +218,12 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
             results.append(data)
             resultsAux.append(data)
             if data.reply != 0:
+                ccc = 0
                 for reply_data in parse_reply(data, parameters, save_settings):
+                    ccc += 1
                     results.append(reply_data)
-                    if parameters['maxTweets'] is not None:
-                        if 0 < parameters['maxTweets'] <= len(results):
-                            break
+                    if ccc > 100:
+                        break
 
             if receiveBuffer and len(resultsAux) >= bufferLength:
                 receiveBuffer(resultsAux)
@@ -242,7 +243,7 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
 def parse_man(parameters):
     logger = logging.getLogger("crawler_log.profile_parse")
     fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     profile = {}

@@ -2,15 +2,18 @@ from requests.utils import quote
 import json
 import itertools
 import datetime
+from fake_useragent import UserAgent
 
 #TODO header generator
 def get_headers():
+    ua = UserAgent()
     headers = {
         'Host': "twitter.com",
-        'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0",
+        'User-Agent': ua.random,
+        #'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0",
         'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         'Accept-Language': "en-US,en;q=0.5",
-        'Connection': "keep-alive"}
+        'Connection': "close"}
 
     return headers
 

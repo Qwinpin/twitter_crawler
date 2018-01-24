@@ -26,7 +26,7 @@ class SQLite3(DataBase):
     def __init__(self, filename):
         self.logger = logging.getLogger("crawler_log.database")
         fh = logging.FileHandler("log.log")
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
         fh.setFormatter(formatter)
         self.logger.addHandler(fh)
         self.table = filename

@@ -39,10 +39,10 @@ class Worker:
         print(" [x] Received ", task)
         try:
             if task['type'] == "tweets":
-                pass
-                #self.crawl_tweets(task)
+                self.crawl_tweets(task)
             elif task['type'] == "profile":
-                self.crawl_profile(task)
+                pass
+                #self.crawl_profile(task)
         except:
             pass
         else:
@@ -52,14 +52,15 @@ class Worker:
     def run(self, clear_queue):
         logger = logging.getLogger("crawler_log.connections")
         fh = logging.FileHandler("log.log")
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
         fh.setFormatter(formatter)
         logger.addHandler(fh)
         credentials = pika.PlainCredentials(self.login, self.password)
         parameters = pika.ConnectionParameters(self.host,
                                                self.port,
                                                '/',
-                                               credentials)
+                                               credentials,
+                                               heartbeat=0)
         try:
             connection = pika.BlockingConnection(parameters)
         except pika.exceptions.ConnectionClosed:
@@ -90,7 +91,7 @@ if __name__ == '__main__':
     logger = logging.getLogger("crawler_log")
     logger.setLevel(logging.INFO)
     fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     logger.info("Start crawler")
