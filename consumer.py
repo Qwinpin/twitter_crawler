@@ -10,7 +10,7 @@ from database import CsvDB, SQLite3
 
 
 class Worker:
-    def __init__(self, db, host, port=5672, login='guest', password='guest'):
+    def __init__(self, db, host, port=5672, login='work', password='1234'):
         self.host = host
         self.port = port
         self.login = login
@@ -30,7 +30,7 @@ class Worker:
         print(os.getpid(), "crawled", len(allData), "tweets")
 
     def crawl_profile(self, task):
-        data, err, cook = ba.parse_man(task['query_param'])
+        data, err, cook = ba.parse_profile(task['query_param'])
         self.db.save_profile(data, task['query_param'])
         print(os.getpid(), "crawled", len(data), "profiles")
 
@@ -41,8 +41,7 @@ class Worker:
             if task['type'] == "tweets":
                 self.crawl_tweets(task)
             elif task['type'] == "profile":
-                pass
-                #self.crawl_profile(task)
+                self.crawl_profile(task)
         except:
             pass
         else:

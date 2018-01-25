@@ -56,8 +56,8 @@ class SQLite3(DataBase):
             try:
                 self.cursor.execute('''INSERT INTO profiles(id_str, screenname, name, tweets_number, followers_number, \
                     following_number, favorites_number, bio, place, place_id, site, birth, creation)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (row.id_str, row.screenname, row.name, row.tweets_number, row.followers_number, \
-                    row.following_number, row.favorites_number, row.bio, row.place, row.place_id, row.site, row.birth, row.creation
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (row['id_str'], row['screenname'], row['name'], row['tweets_number'], row['followers_number'], \
+                    row['following_number'], row['favorites_number'], row['bio'], row['place'], row['place_id'], row['site'], row['birth'], row['creation']
                 ))
             except sql.IntegrityError as e:
                 self.logger.error('INSERT INTO profiles error')

@@ -147,7 +147,8 @@ def parse_reply(data, parameters, save_settings):
                 break
             
             if len(reply_json['items_html'].strip()) == 0:
-                reply_tweets = []
+                reply_active = False
+                break
 
             reply_refreshCursor = reply_json['min_position']
             if reply_refreshCursor is None:
@@ -263,7 +264,7 @@ def parse_profile(parameters):
     tweets_number = page('li.ProfileNav-item--tweets')('span.ProfileNav-value').attr('data-count')
     followers_number = page('li.ProfileNav-item--followers')('span.ProfileNav-value').attr('data-count')
     following_number = page('li.ProfileNav-item--following')('span.ProfileNav-value').attr('data-count')
-    favorites_number = page('li.ProfileNav-item--following')('span.ProfileNav-value').attr('data-count')
+    favorites_number = page('li.ProfileNav-item--favorites')('span.ProfileNav-value').attr('data-count')
     bio = page('p.ProfileHeaderCard-bio').text()
     place = page('div.ProfileHeaderCard-location').text()
     place_id = page('span.ProfileHeaderCard-locationText')('a').attr('data-place-id')
@@ -280,7 +281,10 @@ def parse_profile(parameters):
     profile['favorites_number'] = favorites_number
     profile['bio'] = bio
     profile['place'] = place
-    profile['place_id'] = place_id
+    if place_id is None:
+        profile['place_id'] = ''
+    else:
+        profile['place_id'] = place_id
     profile['site'] = site
     profile['birth'] = birth
     profile['creation'] = creation
