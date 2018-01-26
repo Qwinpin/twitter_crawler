@@ -7,6 +7,11 @@
 3. Support for recursive crawling
 4. **Flexible query**
 
+If you need data, i mean A LOT of data - welcome!
+Distributed, scaling and without any (almost) limitation crawler for Twitter.
+Easy to use, allow to collect more than 1.000.000 tweets per day (depends on you network and resources).
+Do not judge us.
+
 Supported collecting:
 
 1. Tweets:
