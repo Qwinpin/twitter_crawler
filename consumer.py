@@ -19,13 +19,10 @@ class Worker:
 
     def crawl_tweets(self, task):
         allData = []
-        while True:
-            data, err, cook = ba.parse(task['query_param'], task['save_param'])
+        for data, err, cook in ba.parse(task['query_param'], task['save_param']):
             allData += data
-            if err == 0:
-                break
             task['query_param']['cookies'] = cook
-
+            print('step')
         self.db.save_tweets(allData, task['query_param'])
         print(os.getpid(), "crawled", len(allData), "tweets")
 

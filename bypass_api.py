@@ -53,7 +53,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     likes_cookieJar = requests.cookies.RequestsCookieJar()
     try:
         likes_response = requests.get((likes_url), cookies=likes_cookieJar,
-                            headers=likes_headers)
+                            headers=likes_headers, timeout=60)
     except:
         logger.error('Request (likes) error with code:' + str(likes_response.status_code))
         likes_users = []
@@ -73,7 +73,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     retweet_cookieJar = requests.cookies.RequestsCookieJar()
     try:
         retweet_response = requests.get((retweet_url), cookies=retweet_cookieJar,
-            headers=retweet_headers)
+            headers=retweet_headers, timeout=60)
     except:
         logger.error('Request (retweets) error with code:' + str(retweet_response.status_code))
         retweet_users = []
@@ -121,14 +121,14 @@ def parse_reply(data, parameters, save_settings):
     main_conv_page = True
     try:
         reply_response = requests.get((reply_url), cookies=reply_cookieJar,
-                                headers=reply_headers)
+                                headers=reply_headers, timeout=60)
     except:
         logger.error('Request error with code:' + str(reply_response.status_code))
         reply_tweets = []
         reply_active = False
     else:
         reply_active = True
-
+    counter = 0
     while reply_active:
         if main_conv_page:
             page = PyQuery(reply_response.content)
@@ -162,6 +162,9 @@ def parse_reply(data, parameters, save_settings):
 
         for reply_tweetHTML in reply_tweets:
             reply_data = parse_page(reply_tweetHTML, parameters, save_settings, data.id_str)
+            counter += 1
+            if counter > 100:
+                break
             yield reply_data
         
         reply_url = 'https://twitter.com/i/' + data.screenname + '/conversation/' + data.id_str + \
@@ -169,7 +172,7 @@ def parse_reply(data, parameters, save_settings):
                 reply_refreshCursor + '&reset_error_state=false'
         try:
             reply_response = requests.get((reply_url), cookies=reply_cookieJar,
-                            headers=reply_headers)
+                            headers=reply_headers, timeout=60)
         except:
             logger.error('Request error with code:' + str(reply_response.status_code))
             break
@@ -195,38 +198,37 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
         # if any error - return current results and cookies for task manager
         try:
             response = requests.get((parameters['url'] + refreshCursor), cookies=cookieJar,
-                                    headers=parameters['headers'])
+                                    headers=parameters['headers'], timeout=(0.5, 0.5))
         except:
-            logger.error('Request error with code:' + str(response.status_code))
-            return results, 'err_request', cookieJar
+            if response.status_code is not None:
+                logger.error('Request error with code:', response.status_code)
+            break
         
         try:
             json = response.json()
         except:
             logger.error('Response without json content:' + str(response.url))
-            json = {'items_html': ''}
+            break
 
         if len(json['items_html'].strip()) == 0:
             break
 
         refreshCursor = json['min_position']
         tweets = PyQuery(json['items_html'])('div.js-stream-tweet')
-
         if len(tweets) == 0:
             break
         # parse and add to object to return
         for tweetHTML in tweets:
+            out = []
             data = parse_page(tweetHTML, parameters, save_settings)
+            out.append(data)
             results.append(data)
             resultsAux.append(data)
             if data.reply != 0:
-                ccc = 0
                 for reply_data in parse_reply(data, parameters, save_settings):
-                    ccc += 1
+                    out.append(reply_data)
                     results.append(reply_data)
-                    if ccc > 100:
-                        break
-
+            yield out, 0, cookieJar
             if receiveBuffer and len(resultsAux) >= bufferLength:
                 receiveBuffer(resultsAux)
                 resultsAux = []
@@ -240,8 +242,6 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
     if receiveBuffer and len(resultsAux) > 0:
         receiveBuffer(resultsAux)
 
-    return results, 0, cookieJar
-
 def parse_profile(parameters):
     logger = logging.getLogger("crawler_log.profile_parse")
     fh = logging.FileHandler("log.log")
@@ -252,7 +252,7 @@ def parse_profile(parameters):
     cookieJar = requests.cookies.RequestsCookieJar()
     try:
         response = requests.get((parameters['url']), cookies=cookieJar,
-                                headers=parameters['headers'])
+                                headers=parameters['headers'], timeout=60)
     except:
         logger.error('Request error with code:' + str(response.status_code))
         return profile, 'err_request', cookieJar
