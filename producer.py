@@ -7,7 +7,7 @@ from task_creator import create_tasks
 
 
 class Producer:
-    def __init__(self, host, port=5672, login='guest', password='guest'):
+    def __init__(self, host, port=5672, login='serv', password='1234'):
         self.login = login
         self.password = password
         self.host = host

@@ -13,7 +13,7 @@ from task_creator import create_profile_tasks, create_task
 
 
 class Worker:
-    def __init__(self, db, host, port=5672, login='guest', password='guest'):
+    def __init__(self, db, host, port=5672, login='work', password='1234'):
         self.host = host
         self.port = port
         self.login = login
@@ -22,11 +22,8 @@ class Worker:
 
     def crawl_tweets(self, task):
         allData = []
-        while True:
-            data, err, cook = ba.parse(task['query_param'], task['save_param'])
+        for data, err, cook in ba.parse(task['query_param'], task['save_param']):
             allData += data
-            if err == 0:
-                break
             task['query_param']['cookies'] = cook
         print(os.getpid(), "crawled", len(allData), "tweets")
         self.db.save_tweets(allData, task['query_param'])
@@ -34,9 +31,7 @@ class Worker:
         print(os.getpid(), "saved", len(allData), "tweets")
 
     def crawl_profile(self, task):
-        print(os.getpid(), "start", task)
         data, err, cook = ba.parse_profile(task['query_param'])
-        print(os.getpid(), "crawled profile", data)
         self.db.save_profile(data, task['query_param'])
         print(os.getpid(), "saved profile", data)
 
@@ -72,7 +67,6 @@ class Worker:
             if task['type'] == "tweets":
                 self.crawl_tweets(task)
             elif task['type'] == "profile":
-                pass
                 self.crawl_profile(task)
         except:
             pass

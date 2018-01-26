@@ -34,21 +34,24 @@ class SQLite3(DataBase):
         self.cursor = self.db.cursor()
     
     def save_tweets(self, tweets, query):
-        for row in tweets:
-            try:
-                self.cursor.execute('''INSERT INTO tweets(id_str, screenname, created_at, text, \
-                    url, reply_to, favorites, replies, retweets, likes_users, retweet_users, pic)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''', (row.id_str,row.screenname, row.created_at, \
+        transaction = set((row.id_str, row.screenname, row.created_at, \
                     row.text, query['url'], row.reply_to, row.favorites, row.reply, row.retweets, \
                     ', '.join(['-'.join('{} : {}'.format(key, value) for key, value in d.items()) \
                                 for d in row.likes_users]), 
                     ', '.join(['-'.join('{} : {}'.format(key, value) for key, value in d.items()) \
                                 for d in row.retweet_users]), 
-                    row.pic
-                ))
-            except sql.IntegrityError as e:
-                self.logger.error('INSERT INTO tweets error')
+                    row.pic) for row in tweets)
+        for row in transaction:
+            try:
+                self.cursor.execute('''INSERT INTO tweets(id_str, screenname, created_at, text, \
+                    url, reply_to, favorites, replies, retweets, likes_users, retweet_users, pic)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''', row)
+                
+            except:
+                print('e')
+                self.logger.error('Database error')
                 self.db.rollback()
+                self.db.commit()
         self.db.commit()
 
     def save_profile(self, profile, query):
@@ -56,8 +59,8 @@ class SQLite3(DataBase):
             try:
                 self.cursor.execute('''INSERT INTO profiles(id_str, screenname, name, tweets_number, followers_number, \
                     following_number, favorites_number, bio, place, place_id, site, birth, creation)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (row.id_str, row.screenname, row.name, row.tweets_number, row.followers_number, \
-                    row.following_number, row.favorites_number, row.bio, row.place, row.place_id, row.site, row.birth, row.creation
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (row['id_str'], row['screenname'], row['name'], row['tweets_number'], row['followers_number'], \
+                    row['following_number'], row['favorites_number'], row['bio'], row['place'], row['place_id'], row['site'], row['birth'], row['creation']
                 ))
             except sql.IntegrityError as e:
                 self.logger.error('INSERT INTO profiles error')
