@@ -60,7 +60,7 @@ def create_tweet_query(screen_name=None, maxTweets=None, since=None, until=None,
     return query
 
 
-def create_task(query, type, recursion, saveParam=None):
+def create_task(query, type, recursion=0, saveParam=None):
     return json.dumps({
         'query_param': query,
         'save_param': saveParam,
@@ -78,10 +78,10 @@ def create_profile_query(screenname):
 def parse_location(geo):
     if geo is None:
         return None
-    lon = getattr(geo, "lon", 0)
-    lat = getattr(geo, "lat", 0)
-    city = getattr(geo, "city", '')
-    country = getattr(geo, "country", '')
+    lon = geo.get("lon", 0)
+    lat = geo.get("lat", 0)
+    city = geo.get("city", '')
+    country = geo.get("country", '')
     return ",".join([city, country]) \
         if "city" in geo or "country" in geo \
         else ",".join([str(lon), str(lat)])
@@ -94,15 +94,22 @@ def date_range(start, end, delta):
         curr += delta
     yield end
 
+def create_profile_tasks(profiles):
+    profile_tasks = []
+    for prof in profiles:
+        profile_query = create_profile_query(screenname=prof)
+        profile_tasks.append(create_task(query=profile_query,
+                                         type='profile'))
+    return profile_tasks
 
-def create_tasks(queries, saveParam, days_interval=1):
+
+def create_tasks(queries, saveParam, days_interval=3):
     tweet_tasks = []
     profiles = []
     for q in queries:
-        print(q)
-        maxTweets = getattr(q, 'maxTweets', None)
-        topTweets = getattr(q, 'topTweets', None)
-        recursion = getattr(q, 'recursion', 0)
+        maxTweets = q.get('maxTweets', None)
+        topTweets = q.get('topTweets', None)
+        recursion = q.get('recursion', 0)
 
         a = []
         if 'querySearch' in q:
@@ -124,7 +131,6 @@ def create_tasks(queries, saveParam, days_interval=1):
             else now
 
         dates = list(map(lambda d: str(d.date()), date_range(since, until, datetime.timedelta(days=days_interval))))
-        print (dates)
         intervals = [('interval', (d1, d2)) for d1, d2 in zip(dates[0::2], dates[1::2])]
         a.append(intervals)
 
@@ -144,11 +150,4 @@ def create_tasks(queries, saveParam, days_interval=1):
                                            type='tweets',
                                            recursion=recursion))
 
-    profile_tasks = []
-    for name in set(profiles):
-        profile_query = create_profile_query(screenname=name)
-        profile_tasks.append(create_task(query=profile_query,
-                                         type='profile',
-                                         recursion=recursion))
-
-    return tweet_tasks + profile_tasks
+    return tweet_tasks #+ create_profile_tasks(set(profiles))

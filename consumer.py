@@ -1,12 +1,15 @@
 import pika
 import json
+import re
 import os
 import argparse
 from multiprocessing import Process
 import logging
+import sys
 
 import bypass_api as ba
 from database import CsvDB, SQLite3
+from task_creator import create_profile_tasks, create_task
 
 
 class Worker:
@@ -25,14 +28,42 @@ class Worker:
             if err == 0:
                 break
             task['query_param']['cookies'] = cook
-
-        self.db.save_tweets(allData, task['query_param'])
         print(os.getpid(), "crawled", len(allData), "tweets")
+        self.db.save_tweets(allData, task['query_param'])
+        self.recursion(allData, task)
+        print(os.getpid(), "saved", len(allData), "tweets")
 
     def crawl_profile(self, task):
-        data, err, cook = ba.parse_man(task['query_param'])
+        print(os.getpid(), "start", task)
+        data, err, cook = ba.parse_profile(task['query_param'])
+        print(os.getpid(), "crawled profile", data)
         self.db.save_profile(data, task['query_param'])
-        print(os.getpid(), "crawled", len(data), "profiles")
+        print(os.getpid(), "saved profile", data)
+
+    def recursion(self, tweets, task):
+        if task['recursion'] > 0:
+            mentioned_names = []
+            for tweet in tweets:
+                namesInTweet = re.findall(r'(?<=\W)[@]\S*', tweet.text)
+                mentioned_names += [n[1:] for n in namesInTweet]
+                mentioned_names.append(tweet.screenname)
+
+            mentioned_names = set(mentioned_names)
+            print(mentioned_names)
+            tasks = create_profile_tasks(mentioned_names)
+            for name in mentioned_names:
+                url_arr = task["query"]["url"].split(" ")
+                tasks.append(create_task(query=task["query"],
+                                         saveParam=task["save_param"],
+                                         type='tweets',
+                                         recursion=task['recursion']-1))
+            try:
+                for task in tasks:
+                    self.channel.basic_publish(exchange='',
+                                               routing_key='task_queue',
+                                               body=task)
+            except Exception:
+                print(sys.exc_info())
 
     def callback(self, ch, method, properties, body):
         task = json.loads(body.decode('utf-8'))
@@ -42,12 +73,11 @@ class Worker:
                 self.crawl_tweets(task)
             elif task['type'] == "profile":
                 pass
-                #self.crawl_profile(task)
+                self.crawl_profile(task)
         except:
             pass
         else:
             ch.basic_ack(delivery_tag=method.delivery_tag)
-
 
     def run(self):
         logger = logging.getLogger("crawler_log.connections")
@@ -60,22 +90,22 @@ class Worker:
                                                port=self.port,
                                                virtual_host='/',
                                                credentials=credentials,
-                                               heartbeat=60*60)
+                                               heartbeat=60 * 60)
         try:
             connection = pika.BlockingConnection(parameters)
         except pika.exceptions.ConnectionClosed:
             logger.error('Connection (pika) failed')
             raise
 
-        channel = connection.channel()
-        channel.queue_declare(queue='task_queue', durable=True)
+        self.channel = connection.channel()
+        self.channel.queue_declare(queue='task_queue', durable=True)
         print(os.getpid(), 'is waiting for messages. ')
 
-        channel.basic_qos(prefetch_count=1)
-        channel.basic_consume(self.callback,
-                              queue='task_queue')
+        self.channel.basic_qos(prefetch_count=1)
+        self.channel.basic_consume(self.callback,
+                                   queue='task_queue')
 
-        channel.start_consuming()
+        self.channel.start_consuming()
 
 
 def run_worker(host, file):
@@ -90,7 +120,7 @@ if __name__ == '__main__':
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     logger.info("Start crawler")
-    
+
     parser = argparse.ArgumentParser(description='Crawler')
     parser.add_argument('-w', '--workers', help='Set number of workers', default=4, type=int, dest="workers_num")
     args_c = parser.parse_args()
