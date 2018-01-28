@@ -27,8 +27,8 @@ class Worker:
             task['query_param']['cookies'] = cook
         print(os.getpid(), "crawled", len(allData), "tweets")
         self.db.save_tweets(allData, task['query_param'])
-        self.recursion(allData, task)
         print(os.getpid(), "saved", len(allData), "tweets")
+        self.recursion(allData, task)
 
     def crawl_profile(self, task):
         data, err, cook = ba.parse_profile(task['query_param'])
@@ -44,21 +44,27 @@ class Worker:
                 mentioned_names.append(tweet.screenname)
 
             mentioned_names = set(mentioned_names)
-            print(mentioned_names)
+
             tasks = create_profile_tasks(mentioned_names)
+            url_arr = task["query_param"]["url"].split(" ")
+            task["query_param"]["cookies"] = None
+
             for name in mentioned_names:
-                url_arr = task["query"]["url"].split(" ")
-                tasks.append(create_task(query=task["query"],
+                if url_arr[1].find("from:") == -1:
+                    url_arr.insert(1, "from:" + name)
+                else:
+                    url_arr[1] = "from:" + name
+                task["query_param"]["url"] = " ".join(url_arr)
+                tasks.append(create_task(query=task["query_param"],
                                          saveParam=task["save_param"],
                                          type='tweets',
                                          recursion=task['recursion']-1))
-            try:
-                for task in tasks:
-                    self.channel.basic_publish(exchange='',
-                                               routing_key='task_queue',
-                                               body=task)
-            except Exception:
-                print(sys.exc_info())
+
+            for task in tasks:
+                self.channel.basic_publish(exchange='',
+                                           routing_key='task_queue',
+                                           body=task)
+
 
     def callback(self, ch, method, properties, body):
         task = json.loads(body.decode('utf-8'))
@@ -68,8 +74,8 @@ class Worker:
                 self.crawl_tweets(task)
             elif task['type'] == "profile":
                 self.crawl_profile(task)
-        except:
-            pass
+        except Exception:
+            print(sys.exc_info())
         else:
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
