@@ -198,10 +198,10 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
         # if any error - return current results and cookies for task manager
         try:
             response = requests.get((parameters['url'] + refreshCursor), cookies=cookieJar,
-                                    headers=parameters['headers'], timeout=(0.5, 0.5))
+                                    headers=parameters['headers'], timeout=60)
         except:
-            if response.status_code is not None:
-                logger.error('Request error with code:', response.status_code)
+            # if response.status_code is not None:
+            #     logger.error('Request error with code:', response.status_code)
             break
         
         try:
@@ -254,7 +254,7 @@ def parse_profile(parameters):
         response = requests.get((parameters['url']), cookies=cookieJar,
                                 headers=parameters['headers'], timeout=60)
     except:
-        logger.error('Request error with code:' + str(response.status_code))
+        # logger.error('Request error :' + str(response.status_code))
         return profile, 'err_request', cookieJar
 
     page = PyQuery(response.content)
