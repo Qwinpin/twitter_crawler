@@ -65,7 +65,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
         else: 
             for i in likes[0]:
                 likes_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
-                                    PyQuery(i)('div.account').attr('data-name')})
+                                    PyQuery(i)('div.account').attr('data-screen-name')})
     retweet_users = []
     retweet_url = 'https://twitter.com/i/activity/retweeted_popup?id=' + str(ids)
     retweet_headers = parameters['headers']
@@ -85,7 +85,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
         else:
             for i in retweet[0]:
                 retweet_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
-                                    PyQuery(i)('div.account').attr('data-name')})
+                                    PyQuery(i)('div.account').attr('data-screen-name')})
 
     tweet.id_str = ids
     tweet.permalink = 'https://twitter.com' + permalink
