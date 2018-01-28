@@ -32,8 +32,12 @@ class Worker:
 
     def crawl_profile(self, task):
         data, err, cook = ba.parse_profile(task['query_param'])
-        self.db.save_profile(data, task['query_param'])
-        print(os.getpid(), "saved profile", data)
+        print(data, err)
+        if err == 0:
+            self.db.save_profile(data, task['query_param'])
+            print(os.getpid(), "saved profile", data)
+        else:
+            raise Exception("Task is failed")
 
     def recursion(self, tweets, task):
         if task['recursion'] > 0:
@@ -68,14 +72,15 @@ class Worker:
 
     def callback(self, ch, method, properties, body):
         task = json.loads(body.decode('utf-8'))
-        print(" [x] Received ", task)
+        print(os.getpid(), "Received ", task)
         try:
             if task['type'] == "tweets":
                 self.crawl_tweets(task)
             elif task['type'] == "profile":
                 self.crawl_profile(task)
         except Exception:
-            print(sys.exc_info())
+            exc_type, exc_obj, tb = sys.exc_info()
+            print(os.getpid(), exc_type, exc_obj, "at", tb.tb_lineno)
         else:
             ch.basic_ack(delivery_tag=method.delivery_tag)
 

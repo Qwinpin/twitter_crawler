@@ -150,4 +150,4 @@ def create_tasks(queries, saveParam, days_interval=3):
                                            type='tweets',
                                            recursion=recursion))
 
-    return tweet_tasks #+ create_profile_tasks(set(profiles))
+    return tweet_tasks + create_profile_tasks(set(profiles))
