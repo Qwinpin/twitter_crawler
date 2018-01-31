@@ -55,7 +55,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
         likes_response = requests.get((likes_url), cookies=likes_cookieJar,
                             headers=likes_headers, timeout=60)
     except:
-        logger.error('Request (likes) error with code:' + str(likes_response.status_code))
+        logger.error('Request (likes) error with code:')
         likes_users = []
     else:
         try:
@@ -75,7 +75,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
         retweet_response = requests.get((retweet_url), cookies=retweet_cookieJar,
             headers=retweet_headers, timeout=60)
     except:
-        logger.error('Request (retweets) error with code:' + str(retweet_response.status_code))
+        logger.error('Request (retweets) error with code:')
         retweet_users = []
     else:
         try:
@@ -123,7 +123,7 @@ def parse_reply(data, parameters, save_settings):
         reply_response = requests.get((reply_url), cookies=reply_cookieJar,
                                 headers=reply_headers, timeout=60)
     except:
-        logger.error('Request error with code:' + str(reply_response.status_code))
+        logger.error('Request error with code:')
         reply_tweets = []
         reply_active = False
     else:
@@ -174,7 +174,7 @@ def parse_reply(data, parameters, save_settings):
             reply_response = requests.get((reply_url), cookies=reply_cookieJar,
                             headers=reply_headers, timeout=60)
         except:
-            logger.error('Request error with code:' + str(reply_response.status_code))
+            logger.error('Request error with code:')
             break
 
 
@@ -255,7 +255,7 @@ def parse_profile(parameters):
                                 headers=parameters['headers'], timeout=60)
     except:
         # logger.error('Request error :' + str(response.status_code))
-        return profile, 'err_request', cookieJar
+        return profile, 1, cookieJar
 
     page = PyQuery(response.content)
     id_str = page('div.ProfileNav').attr('data-user-id')

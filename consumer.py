@@ -37,7 +37,8 @@ class Worker:
             self.db.save_profile(data, task['query_param'])
             print(os.getpid(), "saved profile", data)
         else:
-            raise Exception("Task is failed")
+            print('Error')
+            #raise Exception("Task is failed")
 
     def recursion(self, tweets, task):
         if task['recursion'] > 0:
@@ -81,6 +82,13 @@ class Worker:
         except Exception:
             exc_type, exc_obj, tb = sys.exc_info()
             print(os.getpid(), exc_type, exc_obj, "at", tb.tb_lineno)
+            try:
+                if task['type'] == "tweets":
+                    self.crawl_tweets(task)
+                elif task['type'] == "profile":
+                    self.crawl_profile(task)
+            except:
+                ch.basic_ack(delivery_tag=method.delivery_tag)
         else:
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
@@ -95,7 +103,7 @@ class Worker:
                                                port=self.port,
                                                virtual_host='/',
                                                credentials=credentials,
-                                               heartbeat=60 * 60)
+                                               heartbeat=3600)
         try:
             connection = pika.BlockingConnection(parameters)
         except pika.exceptions.ConnectionClosed:

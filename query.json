@@ -1,39 +1,8 @@
 [{
-   "screen_name": ["xbox"],
    "maxTweets": 100,
-   "since": "2017-01-01",
-   "until": "2018-01-01",
-   "querySearch": ["one", "game"],
+   "since": "2014-01-01",
+   "until": "2015-01-01",
+   "querySearch": ["cannabis", "mdma"],
    "topTweets": false,
    "recursion": 1
-},
-{
-   "screen_name": ["fondskolkovo", "kremlinrussia"],
-   "maxTweets": 200,
-   "since": "2017-08-15",
-   "until": "2018-01-01",
-   "topTweets": false
-},
-{
-   "until": "2018-01-08",
-   "querySearch": ["new", "year", "new year"],
-   "locations": [
-      {
-         "lat": 59.97669253,
-         "lon": 37.216751122,
-         "radius": 50
-      },
-      {
-         "lat": 37.97669253,
-         "lon": -122.216751122,
-         "radius": 50
-      },
-      {
-         "city": "Saint-Petersburg",
-         "county": "Russia",
-         "radius": 100
-      }
-   ],
-   "recursion": 1
-}
-]
+}]
