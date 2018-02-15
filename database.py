@@ -3,12 +3,14 @@ import sqlite3 as sql
 from tqdm import tqdm
 import logging
 
+
 class DataBase:
     def save_tweets(self, tweets, query):
         pass
 
     def save_profile(self, profile):
         pass
+
 
 class CsvDB(DataBase):
     def __init__(self, filename, rewrite=False):
@@ -22,31 +24,35 @@ class CsvDB(DataBase):
             for tweet in tweets:
                 wr.writerow(list(tweet))
 
+
 class SQLite3(DataBase):
     def __init__(self, filename):
         self.logger = logging.getLogger("crawler_log.database")
         fh = logging.FileHandler("log.log")
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d'
+        )
         fh.setFormatter(formatter)
         self.logger.addHandler(fh)
         self.table = filename
         self.db = sql.connect('.//twitter.db')
         self.cursor = self.db.cursor()
-    
+
     def save_tweets(self, tweets, query):
         transaction = set((row.id_str, row.screenname, row.created_at, \
                     row.text, query['url'], row.reply_to, row.favorites, row.reply, row.retweets, \
                     ', '.join(['-'.join('{} : {}'.format(key, value) for key, value in d.items()) \
-                                for d in row.likes_users]), 
+                                for d in row.likes_users]),
                     ', '.join(['-'.join('{} : {}'.format(key, value) for key, value in d.items()) \
-                                for d in row.retweet_users]), 
+                                for d in row.retweet_users]),
                     row.pic) for row in tweets)
         for row in transaction:
             try:
-                self.cursor.execute('''INSERT INTO tweets(id_str, screenname, created_at, text, \
+                self.cursor.execute(
+                    '''INSERT INTO tweets(id_str, screenname, created_at, text, \
                     url, reply_to, favorites, replies, retweets, likes_users, retweet_users, pic)
                     VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''', row)
-                
+
             except:
                 print('e')
                 self.logger.error('Database error')

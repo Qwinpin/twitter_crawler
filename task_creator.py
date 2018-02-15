@@ -8,27 +8,35 @@ from fake_useragent import UserAgent
 def get_headers():
     ua = UserAgent()
     headers = {
-        'Host': "twitter.com",
-        'User-Agent': ua.random,
+        'Host':
+        "twitter.com",
+        'User-Agent':
+        ua.random,
         #'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0",
-        'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        'Accept-Language': "en-US,en;q=0.5",
-        'Connection': "keep-alive"}
+        'Accept':
+        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        'Accept-Language':
+        "en-US,en;q=0.5",
+        'Connection':
+        "keep-alive"
+    }
 
     return headers
 
 
-def create_tweet_query(screen_name=None, maxTweets=None, since=None, until=None, querySearch='',
-                       topTweets=False, near=None, within=None, cookies=None):
-    parameters_url = (
-        ('', querySearch),
-        (' from:', screen_name),
-        (' near:', near),
-        (' within:', within),
-        (' since:', since),
-        (' until:', until),
-        ('&src=typd&max_position=', '')
-    )
+def create_tweet_query(screen_name=None,
+                       maxTweets=None,
+                       since=None,
+                       until=None,
+                       querySearch='',
+                       topTweets=False,
+                       near=None,
+                       within=None,
+                       cookies=None):
+    parameters_url = (('', querySearch), (' from:', screen_name),
+                      (' near:', near), (' within:', within), (' since:',
+                                                               since),
+                      (' until:', until), ('&src=typd&max_position=', ''))
 
     parameters_api = {
         'screen_name': screen_name,
@@ -70,9 +78,10 @@ def create_task(query, type, recursion=0, saveParam=None):
 
 
 def create_profile_query(screenname):
-    return {'headers': get_headers(),
-            'url': 'https://twitter.com/' + screenname
-            }
+    return {
+        'headers': get_headers(),
+        'url': 'https://twitter.com/' + screenname
+    }
 
 
 def parse_location(geo):
@@ -94,12 +103,12 @@ def date_range(start, end, delta):
         curr += delta
     yield end
 
+
 def create_profile_tasks(profiles):
     profile_tasks = []
     for prof in profiles:
         profile_query = create_profile_query(screenname=prof)
-        profile_tasks.append(create_task(query=profile_query,
-                                         type='profile'))
+        profile_tasks.append(create_task(query=profile_query, type='profile'))
     return profile_tasks
 
 
@@ -130,8 +139,12 @@ def create_tasks(queries, saveParam, days_interval=3):
             if ('until' in q) \
             else now
 
-        dates = list(map(lambda d: str(d.date()), date_range(since, until, datetime.timedelta(days=days_interval))))
-        intervals = [('interval', (d1, d2)) for d1, d2 in zip(dates[0::2], dates[1::2])]
+        dates = list(
+            map(lambda d: str(d.date()),
+                date_range(
+                    since, until, datetime.timedelta(days=days_interval))))
+        intervals = [('interval', (d1, d2))
+                     for d1, d2 in zip(dates[0::2], dates[1::2])]
         a.append(intervals)
 
         for element in itertools.product(*a):
@@ -145,9 +158,11 @@ def create_tasks(queries, saveParam, days_interval=3):
                 until=p.get('interval')[1],
                 querySearch=p['querySearch'] if 'querySearch' in p else '',
                 topTweets=topTweets)
-            tweet_tasks.append(create_task(query=query,
-                                           saveParam=saveParam,
-                                           type='tweets',
-                                           recursion=recursion))
+            tweet_tasks.append(
+                create_task(
+                    query=query,
+                    saveParam=saveParam,
+                    type='tweets',
+                    recursion=recursion))
 
     return tweet_tasks + create_profile_tasks(set(profiles))

@@ -1,20 +1,27 @@
 import csv
 import tweepy
 
+
 class Tweet:
     def __init__(self):
         pass
 
+
 def login():
     auths = []
-    keys = [['EuWfHYw3IobAL8q2xrhmRQaz6', 'flVDfdM9ClclgCtkiOUGzKZzH5KjsvnkOGwcxJEUu18OET1wQL']]
+    keys = [[
+        'EuWfHYw3IobAL8q2xrhmRQaz6',
+        'flVDfdM9ClclgCtkiOUGzKZzH5KjsvnkOGwcxJEUu18OET1wQL'
+    ]]
 
-    for key in keys:  
-        auth = tweepy.AppAuthHandler(key[0], key[1])  
+    for key in keys:
+        auth = tweepy.AppAuthHandler(key[0], key[1])
         auths.append(auth)
 
-    api = tweepy.API(auths[0], wait_on_rate_limit = True, wait_on_rate_limit_notify = True)
+    api = tweepy.API(
+        auths[0], wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
     return api
+
 
 def get_tweets_3200(api, parameters):
 
@@ -25,7 +32,7 @@ def get_tweets_3200(api, parameters):
     print(name)
     #first request, we get last id to next iter
     try:
-        new_tw = api.user_timeline(screen_name = name, count = 1)
+        new_tw = api.user_timeline(screen_name=name, count=1)
     except tweepy.TweepError as err:
         return all_tweets, err
 
@@ -34,7 +41,8 @@ def get_tweets_3200(api, parameters):
 
     while len(new_tw) > 0 and parameters['maxTweets'] > len(all_tweets):
         try:
-            new_tw = api.user_timeline(screen_name = name, count = 200, max_id = last_id)
+            new_tw = api.user_timeline(
+                screen_name=name, count=200, max_id=last_id)
         except tweepy.TweepError as err:
             return all_tweets, err
 
@@ -44,13 +52,14 @@ def get_tweets_3200(api, parameters):
 
     return all_tweets, 0
 
+
 def get_followers(api, parameters):
     print('began get fol-rs1')
     name = parameters[0]['screen_name']
 
     #init cursor obj for follower
     try:
-        followers = tweepy.Cursor(api.followers_ids, id = name)
+        followers = tweepy.Cursor(api.followers_ids, id=name)
     except tweepy.TweepError as err:
         return [], err
 
@@ -75,12 +84,13 @@ def get_followers(api, parameters):
 
     return ids, 0
 
+
 def get_following(api, parameters):
     print('began get fol-ing')
     name = parameters[0]['screen_name']
     #init cursor obj for following
     try:
-        following = tweepy.Cursor(api.friends_ids, id = name)
+        following = tweepy.Cursor(api.friends_ids, id=name)
     except tweepy.TweepError as err:
         return [], err
 
@@ -102,8 +112,10 @@ def get_following(api, parameters):
 
     return ids, 0
 
+
 def group(iterable, count):
     return [iterable[i:i + count] for i in range(0, len(iterable), count)]
+
 
 def get_number_of_tweets(api, parameters):
     #ooookay, it's boring

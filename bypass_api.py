@@ -4,36 +4,52 @@ from pyquery import PyQuery
 import requests
 import logging
 
+
 class Tweet:
     def __init__(self, save_settings):
         self.save_settings = save_settings
 
     def __iter__(self):
-        return iter([self.__dict__[field]
-                     for field in self.save_settings
-                     if hasattr(self, field) and self.save_settings[field]])
+        return iter([
+            self.__dict__[field] for field in self.save_settings
+            if hasattr(self, field) and self.save_settings[field]
+        ])
 
     def to_csv(self):
-        return ",".join([self.__dict__[field]
-                         for field in self.save_settings
-                         if self.save_settings[field]])
+        return ",".join([
+            self.__dict__[field] for field in self.save_settings
+            if self.save_settings[field]
+        ])
+
 
 def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     logger = logging.getLogger("crawler_log.parse_page")
     fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     tweetPQ = PyQuery(tweetHTML)
     tweet = Tweet(save_settings)
     usernameTweet = tweetPQ("span:first.username.u-dir b").text()
-    txt = re.sub(r"\s+", " ", tweetPQ("p.js-tweet-text").text().replace('# ', '#').replace('@ ', '@'))
+    txt = re.sub(r"\s+", " ",
+                 tweetPQ("p.js-tweet-text").text().replace('# ', '#').replace(
+                     '@ ', '@'))
     pic = re.findall(r"(pic.twitter.com[^\s]+)", txt)
-    retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr("data-tweet-stat-count"))
-    favorites = int(tweetPQ("span.ProfileTweet-action--favorite span.ProfileTweet-actionCount").attr("data-tweet-stat-count"))
-    reply = int(tweetPQ("span.ProfileTweet-action--reply span.ProfileTweet-actionCount").attr("data-tweet-stat-count"))
+    retweets = int(
+        tweetPQ(
+            "span.ProfileTweet-action--retweet span.ProfileTweet-actionCount")
+        .attr("data-tweet-stat-count"))
+    favorites = int(
+        tweetPQ(
+            "span.ProfileTweet-action--favorite span.ProfileTweet-actionCount")
+        .attr("data-tweet-stat-count"))
+    reply = int(
+        tweetPQ("span.ProfileTweet-action--reply span.ProfileTweet-actionCount"
+                ).attr("data-tweet-stat-count"))
     try:
-        dateSec = int(tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
+        dateSec = int(
+            tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
     except:
         logger.error('Timestamp error')
         dateSec = 0
@@ -45,43 +61,51 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     if len(geoSpan) > 0:
         geo = geoSpan.attr('title')
 
-
     likes_users = []
     likes_url = 'https://twitter.com/i/activity/favorited_popup?id=' + str(ids)
     likes_headers = parameters['headers']
     likes_headers['Referer'] = likes_url
     likes_cookieJar = requests.cookies.RequestsCookieJar()
     try:
-        likes_response = requests.get((likes_url), cookies=likes_cookieJar,
-                            headers=likes_headers, timeout=60)
+        likes_response = requests.get(
+            (likes_url),
+            cookies=likes_cookieJar,
+            headers=likes_headers,
+            timeout=60)
     except:
-        logger.error('Request (likes) error with code:')
+        #logger.error('Request (likes) error with code:')
         likes_users = []
     else:
         try:
             likes = PyQuery(likes_response.json()['htmlUsers'])('ol')
         except:
-            logger.error('Response without json content:' + str(likes_response.url))
-        else: 
+            pass
+            #logger.error('Response without json content:' + str(likes_response.url))
+        else:
             for i in likes[0]:
                 likes_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
                                     PyQuery(i)('div.account').attr('data-screen-name')})
     retweet_users = []
-    retweet_url = 'https://twitter.com/i/activity/retweeted_popup?id=' + str(ids)
+    retweet_url = 'https://twitter.com/i/activity/retweeted_popup?id=' + str(
+        ids)
     retweet_headers = parameters['headers']
     retweet_headers['Referer'] = retweet_url
     retweet_cookieJar = requests.cookies.RequestsCookieJar()
     try:
-        retweet_response = requests.get((retweet_url), cookies=retweet_cookieJar,
-            headers=retweet_headers, timeout=60)
+        retweet_response = requests.get(
+            (retweet_url),
+            cookies=retweet_cookieJar,
+            headers=retweet_headers,
+            timeout=60)
     except:
-        logger.error('Request (retweets) error with code:')
+        #logger.error('Request (retweets) error with code:')
         retweet_users = []
     else:
         try:
             retweet = PyQuery(retweet_response.json()['htmlUsers'])('ol')
         except:
-            logger.error('Response without json content:' + str(retweet_response.url))
+            logger.error(
+                'Response without json content:' + str(retweet_response.url))
         else:
             for i in retweet[0]:
                 retweet_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
@@ -92,7 +116,8 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     tweet.screenname = usernameTweet
     tweet.text = txt.encode('utf-8').decode('utf-8')
     if dateSec != 0:
-        tweet.created_at = datetime.datetime.fromtimestamp(dateSec).strftime("%Y-%m-%d %H:%M:%S")
+        tweet.created_at = datetime.datetime.fromtimestamp(dateSec).strftime(
+            "%Y-%m-%d %H:%M:%S")
     else:
         tweet.created_at = '1970-01-01'
     tweet.pic = ', '.join(pic)
@@ -107,21 +132,26 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
     tweet.reply_to = id_origin
     return tweet
 
+
 def parse_reply(data, parameters, save_settings):
     logger = logging.getLogger("crawler_log.parse_reply")
     fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     reply_refreshCursor = ''
-    reply_url ='https://twitter.com/' + data.screenname + '/status/' + data.id_str + '?conversation_id=' + data.id_str
+    reply_url = 'https://twitter.com/' + data.screenname + '/status/' + data.id_str + '?conversation_id=' + data.id_str
     reply_headers = parameters['headers']
     reply_headers['Referer'] = reply_url
     reply_cookieJar = requests.cookies.RequestsCookieJar()
     main_conv_page = True
     try:
-        reply_response = requests.get((reply_url), cookies=reply_cookieJar,
-                                headers=reply_headers, timeout=60)
+        reply_response = requests.get(
+            (reply_url),
+            cookies=reply_cookieJar,
+            headers=reply_headers,
+            timeout=60)
     except:
         logger.error('Request error with code:')
         reply_tweets = []
@@ -133,9 +163,12 @@ def parse_reply(data, parameters, save_settings):
         if main_conv_page:
             page = PyQuery(reply_response.content)
             reply_tweets = page('div.js-stream-tweet')
-            reply_refreshCursor = page('div.stream-container').attr('data-min-position')
+            reply_refreshCursor = page('div.stream-container').attr(
+                'data-min-position')
             if reply_refreshCursor == '':
-                reply_refreshCursor = page('li.ThreadedConversation-moreReplies').attr('data-expansion-url')
+                reply_refreshCursor = page(
+                    'li.ThreadedConversation-moreReplies').attr(
+                        'data-expansion-url')
             if reply_refreshCursor is None:
                 reply_refreshCursor = ''
             main_conv_page = False
@@ -143,9 +176,10 @@ def parse_reply(data, parameters, save_settings):
             try:
                 reply_json = reply_response.json()
             except:
-                logger.error('Response without json content:' + str(reply_response.url))
+                logger.error(
+                    'Response without json content:' + str(reply_response.url))
                 break
-            
+
             if len(reply_json['items_html'].strip()) == 0:
                 reply_active = False
                 break
@@ -155,34 +189,44 @@ def parse_reply(data, parameters, save_settings):
                 reply_refreshCursor = ''
                 reply_active = False
             try:
-                reply_tweets = PyQuery(reply_json['items_html'])('div.js-stream-tweet')
+                reply_tweets = PyQuery(
+                    reply_json['items_html'])('div.js-stream-tweet')
             except:
                 logger.info(reply_tweets)
                 logger.error('Parse error')
 
         for reply_tweetHTML in reply_tweets:
-            reply_data = parse_page(reply_tweetHTML, parameters, save_settings, data.id_str)
+            reply_data = parse_page(reply_tweetHTML, parameters, save_settings,
+                                    data.id_str)
             counter += 1
             if counter > 100:
                 break
             yield reply_data
-        
+
         reply_url = 'https://twitter.com/i/' + data.screenname + '/conversation/' + data.id_str + \
                 '?conversation_id=' + data.id_str + '?include_available_features=1&include_entities=1&max_position=' + \
                 reply_refreshCursor + '&reset_error_state=false'
         try:
-            reply_response = requests.get((reply_url), cookies=reply_cookieJar,
-                            headers=reply_headers, timeout=60)
+            reply_response = requests.get(
+                (reply_url),
+                cookies=reply_cookieJar,
+                headers=reply_headers,
+                timeout=60)
         except:
             logger.error('Request error with code:')
             break
 
 
 # parse json data, refresh 'page' to download new tweets
-def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy=None):
+def parse(parameters,
+          save_settings,
+          receiveBuffer=None,
+          bufferLength=100,
+          proxy=None):
     logger = logging.getLogger("crawler_log.main_parse")
     fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     refreshCursor = ''
@@ -197,13 +241,16 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
     while active:
         # if any error - return current results and cookies for task manager
         try:
-            response = requests.get((parameters['url'] + refreshCursor), cookies=cookieJar,
-                                    headers=parameters['headers'], timeout=60)
+            response = requests.get(
+                (parameters['url'] + refreshCursor),
+                cookies=cookieJar,
+                headers=parameters['headers'],
+                timeout=60)
         except:
             # if response.status_code is not None:
             #     logger.error('Request error with code:', response.status_code)
             break
-        
+
         try:
             json = response.json()
         except:
@@ -242,17 +289,22 @@ def parse(parameters, save_settings, receiveBuffer=None, bufferLength=100, proxy
     if receiveBuffer and len(resultsAux) > 0:
         receiveBuffer(resultsAux)
 
+
 def parse_profile(parameters):
     logger = logging.getLogger("crawler_log.profile_parse")
     fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     profile = {}
     cookieJar = requests.cookies.RequestsCookieJar()
     try:
-        response = requests.get((parameters['url']), cookies=cookieJar,
-                                headers=parameters['headers'], timeout=60)
+        response = requests.get(
+            (parameters['url']),
+            cookies=cookieJar,
+            headers=parameters['headers'],
+            timeout=60)
     except:
         # logger.error('Request error :' + str(response.status_code))
         return profile, 1, cookieJar
@@ -261,13 +313,18 @@ def parse_profile(parameters):
     id_str = page('div.ProfileNav').attr('data-user-id')
     screenname = page('div.user-actions').attr('data-screen-name')
     name = page('div.user-actions').attr('data-name')
-    tweets_number = page('li.ProfileNav-item--tweets')('span.ProfileNav-value').attr('data-count')
-    followers_number = page('li.ProfileNav-item--followers')('span.ProfileNav-value').attr('data-count')
-    following_number = page('li.ProfileNav-item--following')('span.ProfileNav-value').attr('data-count')
-    favorites_number = page('li.ProfileNav-item--favorites')('span.ProfileNav-value').attr('data-count')
+    tweets_number = page('li.ProfileNav-item--tweets')(
+        'span.ProfileNav-value').attr('data-count')
+    followers_number = page('li.ProfileNav-item--followers')(
+        'span.ProfileNav-value').attr('data-count')
+    following_number = page('li.ProfileNav-item--following')(
+        'span.ProfileNav-value').attr('data-count')
+    favorites_number = page('li.ProfileNav-item--favorites')(
+        'span.ProfileNav-value').attr('data-count')
     bio = page('p.ProfileHeaderCard-bio').text()
     place = page('div.ProfileHeaderCard-location').text()
-    place_id = page('span.ProfileHeaderCard-locationText')('a').attr('data-place-id')
+    place_id = page('span.ProfileHeaderCard-locationText')('a').attr(
+        'data-place-id')
     site = page('span.ProfileHeaderCard-urlText').text()
     birth = page('span.ProfileHeaderCard-birthdateText').text()
     creation = page('span.ProfileHeaderCard-joinDateText').attr('title')
@@ -276,7 +333,7 @@ def parse_profile(parameters):
     profile['id_str'] = id_str
     profile['name'] = name
     profile['tweets_number'] = tweets_number
-    profile['followers_number']= followers_number
+    profile['followers_number'] = followers_number
     profile['following_number'] = following_number
     profile['favorites_number'] = favorites_number
     profile['bio'] = bio
@@ -290,6 +347,7 @@ def parse_profile(parameters):
     profile['creation'] = creation
     return profile, 0, cookieJar
 
+
 # for future, return sets of date-range, like [(2016-12-12, 2016-12-24), (2016-12-24, 2016-12-31)]
 def date_prepare(parameters):
     start = parameters.since
@@ -298,6 +356,7 @@ def date_prepare(parameters):
     end = datetime.datetime.strptime(end, '%Y-%m-%d')
 
     days_between = (end - start).days
-    date_list = [(str(end - datetime.timedelta(days=x))[:10], str(end - datetime.timedelta(days=(x + 1)))[:10]) for x in
-                 range(days_between)]
+    date_list = [(str(end - datetime.timedelta(days=x))[:10],
+                  str(end - datetime.timedelta(days=(x + 1)))[:10])
+                 for x in range(days_between)]
     print(date_list)

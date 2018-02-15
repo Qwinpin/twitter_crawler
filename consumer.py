@@ -22,7 +22,8 @@ class Worker:
 
     def crawl_tweets(self, task):
         allData = []
-        for data, err, cook in ba.parse(task['query_param'], task['save_param']):
+        for data, err, cook in ba.parse(task['query_param'],
+                                        task['save_param']):
             allData += data
             task['query_param']['cookies'] = cook
         print(os.getpid(), "crawled", len(allData), "tweets")
@@ -60,16 +61,16 @@ class Worker:
                 else:
                     url_arr[1] = "from:" + name
                 task["query_param"]["url"] = " ".join(url_arr)
-                tasks.append(create_task(query=task["query_param"],
-                                         saveParam=task["save_param"],
-                                         type='tweets',
-                                         recursion=task['recursion']-1))
+                tasks.append(
+                    create_task(
+                        query=task["query_param"],
+                        saveParam=task["save_param"],
+                        type='tweets',
+                        recursion=task['recursion'] - 1))
 
             for task in tasks:
-                self.channel.basic_publish(exchange='',
-                                           routing_key='task_queue',
-                                           body=task)
-
+                self.channel.basic_publish(
+                    exchange='', routing_key='task_queue', body=task)
 
     def callback(self, ch, method, properties, body):
         task = json.loads(body.decode('utf-8'))
@@ -95,15 +96,18 @@ class Worker:
     def run(self):
         logger = logging.getLogger("crawler_log.connections")
         fh = logging.FileHandler("log.log")
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d'
+        )
         fh.setFormatter(formatter)
         logger.addHandler(fh)
         credentials = pika.PlainCredentials(self.login, self.password)
-        parameters = pika.ConnectionParameters(host=self.host,
-                                               port=self.port,
-                                               virtual_host='/',
-                                               credentials=credentials,
-                                               heartbeat=3600)
+        parameters = pika.ConnectionParameters(
+            host=self.host,
+            port=self.port,
+            virtual_host='/',
+            credentials=credentials,
+            heartbeat=3600)
         try:
             connection = pika.BlockingConnection(parameters)
         except pika.exceptions.ConnectionClosed:
@@ -115,8 +119,7 @@ class Worker:
         print(os.getpid(), 'is waiting for messages. ')
 
         self.channel.basic_qos(prefetch_count=1)
-        self.channel.basic_consume(self.callback,
-                                   queue='task_queue')
+        self.channel.basic_consume(self.callback, queue='task_queue')
 
         self.channel.start_consuming()
 
@@ -129,13 +132,20 @@ if __name__ == '__main__':
     logger = logging.getLogger("crawler_log")
     logger.setLevel(logging.INFO)
     fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     logger.info("Start crawler")
 
     parser = argparse.ArgumentParser(description='Crawler')
-    parser.add_argument('-w', '--workers', help='Set number of workers', default=4, type=int, dest="workers_num")
+    parser.add_argument(
+        '-w',
+        '--workers',
+        help='Set number of workers',
+        default=4,
+        type=int,
+        dest="workers_num")
     args_c = parser.parse_args()
 
     workers = []
