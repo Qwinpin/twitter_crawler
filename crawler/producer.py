@@ -1,11 +1,6 @@
-
 from multiprocessing import Process, Queue
 from consumer import Worker
 from database import CsvDB, SQLite3
-
-
-def work(id, db, queue):
-    Worker(db=db, queue=queue).run()
 
 
 class Manager:
@@ -15,11 +10,15 @@ class Manager:
         self.NUMBER_OF_PROCESSES = proc_n
 
     def run(self):
+        def work(db_file, queue):
+            Worker(db=SQLite3(filename=db_file), queue=queue).run()
+
         print("starting %d workers" % self.NUMBER_OF_PROCESSES)
-        self.workers = [Process(target=work, args=(i, SQLite3(filename=self.db_file), self.queue,))
-                        for i in range(self.NUMBER_OF_PROCESSES)]
-        for w in self.workers:
+        self.workers = []
+        for _ in range(self.NUMBER_OF_PROCESSES):
+            w = Process(target=work, args=(self.db_file, self.queue,))
             w.start()
+            self.workers.append(w)
 
     def stop(self):
         self.queue.put(None)
@@ -28,4 +27,5 @@ class Manager:
         self.queue.close()
 
     def send_tasks(self, tasks):
-        pass
+        for task in tasks:
+            self.queue.put(task)

@@ -6,22 +6,13 @@ from fake_useragent import UserAgent
 
 
 def get_headers():
-    ua = UserAgent()
-    headers = {
-        'Host':
-        "twitter.com",
-        'User-Agent':
-        ua.random,
-        #'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0",
-        'Accept':
-        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        'Accept-Language':
-        "en-US,en;q=0.5",
-        'Connection':
-        "keep-alive"
+    return {
+        'Host': "twitter.com",
+        'User-Agent': UserAgent().random,
+        'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        'Accept-Language': "en-US,en;q=0.5",
+        'Connection': "keep-alive"
     }
-
-    return headers
 
 
 def create_tweet_query(screen_name=None,
@@ -33,17 +24,12 @@ def create_tweet_query(screen_name=None,
                        near=None,
                        within=None,
                        cookies=None):
+
     parameters_url = (('', querySearch), (' from:', screen_name),
                       (' near:', near), (' within:', within), (' since:',
                                                                since),
                       (' until:', until), ('&src=typd&max_position=', ''))
 
-    parameters_api = {
-        'screen_name': screen_name,
-        'maxTweets': maxTweets,
-        'topTweets': topTweets,
-        'cookies': cookies
-    }
     if parameters_url[0][1] != '':
         url = 'https://twitter.com/i/search/timeline?l=&q='
     else:
