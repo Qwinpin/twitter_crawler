@@ -30,10 +30,8 @@ def create_tweet_query(screen_name=None,
                                                                since),
                       (' until:', until), ('&src=typd&max_position=', ''))
 
-    if parameters_url[0][1] != '':
-        url = 'https://twitter.com/i/search/timeline?l=&q='
-    else:
-        url = 'https://twitter.com/i/search/timeline?l=&q='
+    url = 'https://twitter.com/i/search/timeline?l=&q='
+    # url = "https://twitter.com/search?l=&q="
 
     for i in parameters_url:
         if i[1] is not None:
@@ -98,7 +96,7 @@ def create_profile_tasks(profiles):
     return profile_tasks
 
 
-def create_tasks(queries, saveParam, days_interval=3):
+def create_tasks(queries, saveParam, days_interval=15):
     tweet_tasks = []
     profiles = []
     for q in queries:
@@ -119,7 +117,7 @@ def create_tasks(queries, saveParam, days_interval=3):
         now = datetime.datetime.today()
         since = datetime.datetime.strptime(q['since'], '%Y-%m-%d') \
             if ('since' in q) \
-            else now - datetime.timedelta(weeks=4 * 6)
+            else now - datetime.timedelta(weeks=4 * 12 * 10)
 
         until = datetime.datetime.strptime(q['until'], '%Y-%m-%d') \
             if ('until' in q) \

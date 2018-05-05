@@ -65,8 +65,8 @@ class Worker:
                 self.queue.put(task)
 
     def callback(self, body):
-        task = json.loads(body.decode('utf-8'))
-        print(os.getpid(), "Received ", task)
+        task = json.loads(body)
+        print(os.getpid(), "Received ", task['type'], task['query_param']['url'])
         try:
             if task['type'] == "tweets":
                 self.crawl_tweets(task)
@@ -83,5 +83,4 @@ class Worker:
             if task is None:
                 break
             self.callback(task)
-            print("%d task:" % id, task)
         self.queue.put(None)
