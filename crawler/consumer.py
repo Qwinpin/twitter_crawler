@@ -1,4 +1,3 @@
-import pika
 import json
 import re
 import os
@@ -10,8 +9,9 @@ from task_creator import create_profile_tasks, create_task
 
 
 class Worker:
-    def __init__(self, db):
+    def __init__(self, db, queue):
         self.db = db
+        self.queue = queue
 
     def crawl_tweets(self, task):
         allData = []
@@ -62,10 +62,9 @@ class Worker:
                         recursion=task['recursion'] - 1))
 
             for task in tasks:
-                self.channel.basic_publish(
-                    exchange='', routing_key='task_queue', body=task)
+                self.queue.put(task)
 
-    def callback(self, ch, method, properties, body):
+    def callback(self, body):
         task = json.loads(body.decode('utf-8'))
         print(os.getpid(), "Received ", task)
         try:
@@ -76,15 +75,13 @@ class Worker:
         except Exception:
             exc_type, exc_obj, tb = sys.exc_info()
             print(os.getpid(), exc_type, exc_obj, "at", tb.tb_lineno)
-            try:
-                if task['type'] == "tweets":
-                    self.crawl_tweets(task)
-                elif task['type'] == "profile":
-                    self.crawl_profile(task)
-            except:
-                ch.basic_ack(delivery_tag=method.delivery_tag)
-        else:
-            ch.basic_ack(delivery_tag=method.delivery_tag)
+            self.queue.put(body)
 
     def run(self):
-        pass
+        while True:
+            task = self.queue.get()
+            if task is None:
+                break
+            self.callback(task)
+            print("%d task:" % id, task)
+        self.queue.put(None)
