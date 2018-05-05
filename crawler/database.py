@@ -1,6 +1,5 @@
 import csv
 import sqlite3 as sql
-from tqdm import tqdm
 import logging
 
 
