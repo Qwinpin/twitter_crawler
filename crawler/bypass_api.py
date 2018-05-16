@@ -23,12 +23,12 @@ class Tweet:
 
 
 def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
-    logger = logging.getLogger("crawler_log.parse_page")
-    fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
+    # logger = logging.getLogger("crawler_log.parse_page")
+    # fh = logging.FileHandler("log.log")
+    # formatter = logging.Formatter(
+    #     '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+    # fh.setFormatter(formatter)
+    # logger.addHandler(fh)
     tweetPQ = PyQuery(tweetHTML)
     tweet = Tweet(save_settings)
     usernameTweet = tweetPQ("span:first.username.u-dir b").text()
@@ -51,7 +51,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
         dateSec = int(
             tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
     except:
-        logger.error('Timestamp error')
+        # logger.error('Timestamp error')
         dateSec = 0
     ids = tweetPQ.attr("data-tweet-id")
     permalink = tweetPQ.attr("data-permalink-path")
@@ -135,12 +135,12 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
 
 
 def parse_reply(data, parameters, save_settings):
-    logger = logging.getLogger("crawler_log.parse_reply")
-    fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
+    # logger = logging.getLogger("crawler_log.parse_reply")
+    # fh = logging.FileHandler("log.log")
+    # formatter = logging.Formatter(
+    #     '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+    # fh.setFormatter(formatter)
+    # logger.addHandler(fh)
     reply_refreshCursor = ''
     reply_url = 'https://twitter.com/' + data.screenname + '/status/' + data.id_str + '?conversation_id=' + data.id_str
     reply_headers = parameters['headers']
@@ -225,12 +225,12 @@ def parse(parameters,
           receiveBuffer=None,
           bufferLength=100,
           proxy=None):
-    logger = logging.getLogger("crawler_log.main_parse")
-    fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
+    # logger = logging.getLogger("crawler_log.main_parse")
+    # fh = logging.FileHandler("log.log")
+    # formatter = logging.Formatter(
+    #     '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+    # fh.setFormatter(formatter)
+    # logger.addHandler(fh)
     refreshCursor = ''
     results = []
     resultsAux = []
@@ -293,12 +293,12 @@ def parse(parameters,
 
 
 def parse_profile(parameters):
-    logger = logging.getLogger("crawler_log.profile_parse")
-    fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
+    # logger = logging.getLogger("crawler_log.profile_parse")
+    # fh = logging.FileHandler("log.log")
+    # formatter = logging.Formatter(
+    #     '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+    # fh.setFormatter(formatter)
+    # logger.addHandler(fh)
     profile = {}
     cookieJar = requests.cookies.RequestsCookieJar()
     try:

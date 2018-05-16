@@ -9,14 +9,14 @@ from task_creator import create_tasks
 
 
 if __name__ == '__main__':
-    logger = logging.getLogger("crawler_log")
-    logger.setLevel(logging.INFO)
-    fh = logging.FileHandler("log.log")
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    logger.info("Start crawler")
+    # logger = logging.getLogger("crawler_log")
+    # logger.setLevel(logging.INFO)
+    # fh = logging.FileHandler("log.log")
+    # formatter = logging.Formatter(
+    #     '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
+    # fh.setFormatter(formatter)
+    # logger.addHandler(fh)
+    # logger.info("Start crawler")
 
     parser = argparse.ArgumentParser(description='Crawler')
     parser.add_argument(
