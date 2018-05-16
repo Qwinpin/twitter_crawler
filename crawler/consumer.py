@@ -32,7 +32,6 @@ class Worker:
             print(os.getpid(), "saved profile", data)
         else:
             print('Error')
-            #raise Exception("Task is failed")
 
     def recursion(self, tweets, task):
         if task['recursion'] > 0:
@@ -66,7 +65,8 @@ class Worker:
 
     def callback(self, body):
         task = json.loads(body)
-        print(os.getpid(), "Received ", task['type'], task['query_param']['url'])
+        print(os.getpid(), "Received ",
+              task['type'], task['query_param']['url'])
         try:
             if task['type'] == "tweets":
                 self.crawl_tweets(task)

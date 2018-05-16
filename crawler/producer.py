@@ -22,7 +22,6 @@ class Manager:
             self.workers.append(w)
 
     def stop(self):
-        self.queue.put(None)
         for i in range(self.NUMBER_OF_PROCESSES):
             self.workers[i].join()
         self.queue.close()
