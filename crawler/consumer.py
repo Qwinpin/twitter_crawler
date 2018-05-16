@@ -29,7 +29,7 @@ class Worker:
         print(data, err)
         if err == 0:
             self.db.save_profile(data, task['query_param'])
-            print(os.getpid(), "saved profile", data)
+            print(os.getpid(), "saved profile")
         else:
             print('Error')
 

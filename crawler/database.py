@@ -52,8 +52,6 @@ class SQLite3(DataBase):
                     VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''', row)
 
             except:
-                print('e')
-                self.logger.error('Database error')
                 self.db.rollback()
         self.db.commit()
 
@@ -67,7 +65,6 @@ class SQLite3(DataBase):
                                                                'place'], row['place_id'], row['site'], row['birth'], row['creation']
                                                            ))
             except sql.IntegrityError as e:
-                self.logger.error('INSERT INTO profiles error')
                 self.db.rollback()
         self.db.commit()
 

@@ -104,8 +104,8 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
         try:
             retweet = PyQuery(retweet_response.json()['htmlUsers'])('ol')
         except:
-            logger.error(
-                'Response without json content:' + str(retweet_response.url))
+            # logger.error(
+            #     'Response without json content:' + str(retweet_response.url))
         else:
             for i in retweet[0]:
                 retweet_users.append({PyQuery(i)('div.account').attr('data-user-id') : \
@@ -153,7 +153,7 @@ def parse_reply(data, parameters, save_settings):
             headers=reply_headers,
             timeout=60)
     except:
-        logger.error('Request error with code:')
+        # logger.error('Request error with code:')
         reply_tweets = []
         reply_active = False
     else:
@@ -176,8 +176,8 @@ def parse_reply(data, parameters, save_settings):
             try:
                 reply_json = reply_response.json()
             except:
-                logger.error(
-                    'Response without json content:' + str(reply_response.url))
+                # logger.error(
+                #     'Response without json content:' + str(reply_response.url))
                 break
 
             if len(reply_json['items_html'].strip()) == 0:
@@ -192,8 +192,8 @@ def parse_reply(data, parameters, save_settings):
                 reply_tweets = PyQuery(
                     reply_json['items_html'])('div.js-stream-tweet')
             except:
-                logger.info(reply_tweets)
-                logger.error('Parse error')
+                # logger.info(reply_tweets)
+                # logger.error('Parse error')
 
         for reply_tweetHTML in reply_tweets:
             reply_data = parse_page(reply_tweetHTML, parameters, save_settings,
@@ -213,7 +213,7 @@ def parse_reply(data, parameters, save_settings):
                 headers=reply_headers,
                 timeout=60)
         except:
-            logger.error('Request error with code:')
+            # logger.error('Request error with code:')
             break
 
 
@@ -254,7 +254,7 @@ def parse(parameters,
         try:
             json = response.json()
         except:
-            logger.error('Response without json content:' + str(response.url))
+            # logger.error('Response without json content:' + str(response.url))
             break
 
         if len(json['items_html'].strip()) == 0:
