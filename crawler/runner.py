@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-w',
         '--workers',
-        help='Set number of workers',
+        help='Number of workers. Default: 4',
         default=4,
         dest="workers_num",
         type=int)
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-q',
         '--query',
-        help='Search query json file',
+        help='Search query json file. Default: ../config/query.json',
         default='../config/query.json',
         dest="query_file",
         type=str)
@@ -38,9 +38,17 @@ if __name__ == '__main__':
     parser.add_argument(
         '-s',
         '--save_set',
-        help='Save settings json file',
+        help='Save settings json file.\nDefault: ../config/save_settings.json',
         default='../config/save_settings.json',
         dest="save_set_file",
+        type=str)
+
+    parser.add_argument(
+        '-d',
+        '--database',
+        help='SQLite database file path. Default: ./twitter.db',
+        default='./twitter.db',
+        dest="db",
         type=str)
 
     args_c = parser.parse_args()
@@ -49,8 +57,7 @@ if __name__ == '__main__':
     saveSet = json.load(open(args_c.save_set_file))
     tasks = create_tasks(query, saveSet)
 
-    p = Manager(db_file="./twitter.db", proc_n=args_c.workers_num)
+    p = Manager(db_file=args_c.db, proc_n=args_c.workers_num)
     p.send_tasks(tasks)
     p.run()
     p.stop()
-
