@@ -104,6 +104,7 @@ def parse_page(tweetHTML, parameters, save_settings, id_origin=''):
         try:
             retweet = PyQuery(retweet_response.json()['htmlUsers'])('ol')
         except:
+            pass
             # logger.error(
             #     'Response without json content:' + str(retweet_response.url))
         else:
@@ -192,6 +193,7 @@ def parse_reply(data, parameters, save_settings):
                 reply_tweets = PyQuery(
                     reply_json['items_html'])('div.js-stream-tweet')
             except:
+                pass
                 # logger.info(reply_tweets)
                 # logger.error('Parse error')
 
