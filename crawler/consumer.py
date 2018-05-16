@@ -41,7 +41,7 @@ class Worker:
                 mentioned_names += [n[1:] for n in namesInTweet]
                 mentioned_names.append(tweet.screenname)
 
-            mentioned_names = set(mentioned_names)
+            mentioned_names = set(mentioned_names) - self.db.get_profiles()
 
             tasks = create_profile_tasks(mentioned_names)
             url_arr = task["query_param"]["url"].split(" ")

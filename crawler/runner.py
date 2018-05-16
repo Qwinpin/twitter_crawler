@@ -49,7 +49,7 @@ if __name__ == '__main__':
     saveSet = json.load(open(args_c.save_set_file))
     tasks = create_tasks(query, saveSet)
 
-    p = Manager(db_file="../twitter.db", proc_n=args_c.workers_num)
+    p = Manager(db_file="./twitter.db", proc_n=args_c.workers_num)
     p.send_tasks(tasks)
     p.run()
     p.stop()

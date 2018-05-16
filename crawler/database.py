@@ -33,18 +33,17 @@ class SQLite3(DataBase):
         )
         fh.setFormatter(formatter)
         self.logger.addHandler(fh)
-        self.table = filename
-        self.db = sql.connect('.//twitter.db')
+        self.db = sql.connect(filename)
         self.cursor = self.db.cursor()
 
     def save_tweets(self, tweets, query):
-        transaction = set((row.id_str, row.screenname, row.created_at, \
-                    row.text, query['url'], row.reply_to, row.favorites, row.reply, row.retweets, \
-                    ', '.join(['-'.join('{} : {}'.format(key, value) for key, value in d.items()) \
-                                for d in row.likes_users]),
-                    ', '.join(['-'.join('{} : {}'.format(key, value) for key, value in d.items()) \
-                                for d in row.retweet_users]),
-                    row.pic) for row in tweets)
+        transaction = set((row.id_str, row.screenname, row.created_at,
+                           row.text, query['url'], row.reply_to, row.favorites, row.reply, row.retweets,
+                           ', '.join(['-'.join('{} : {}'.format(key, value) for key, value in d.items())
+                                      for d in row.likes_users]),
+                           ', '.join(['-'.join('{} : {}'.format(key, value) for key, value in d.items())
+                                      for d in row.retweet_users]),
+                           row.pic) for row in tweets)
         for row in transaction:
             try:
                 self.cursor.execute(
@@ -56,7 +55,6 @@ class SQLite3(DataBase):
                 print('e')
                 self.logger.error('Database error')
                 self.db.rollback()
-                self.db.commit()
         self.db.commit()
 
     def save_profile(self, profile, query):
@@ -64,10 +62,16 @@ class SQLite3(DataBase):
             try:
                 self.cursor.execute('''INSERT INTO profiles(id_str, screenname, name, tweets_number, followers_number, \
                     following_number, favorites_number, bio, place, place_id, site, birth, creation)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (row['id_str'], row['screenname'], row['name'], row['tweets_number'], row['followers_number'], \
-                    row['following_number'], row['favorites_number'], row['bio'], row['place'], row['place_id'], row['site'], row['birth'], row['creation']
-                ))
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (row['id_str'], row['screenname'], row['name'], row['tweets_number'], row['followers_number'],
+                                                           row['following_number'], row['favorites_number'], row['bio'], row[
+                                                               'place'], row['place_id'], row['site'], row['birth'], row['creation']
+                                                           ))
             except sql.IntegrityError as e:
                 self.logger.error('INSERT INTO profiles error')
                 self.db.rollback()
         self.db.commit()
+
+    def get_profiles(self):
+        self.cursor.execute("SELECT DISTINCT screenname FROM profiles")
+        profiles = set(map(lambda name: name[0], self.cursor.fetchall()))
+        return profiles
