@@ -5,7 +5,7 @@ import logging
 import sys
 
 import bypass_api as ba
-from task_creator import create_profile_tasks, create_task
+from task_creator import create_tasks
 
 
 class Worker:
@@ -38,27 +38,21 @@ class Worker:
             mentioned_names = []
             for tweet in tweets:
                 namesInTweet = re.findall(r'(?<=\W)[@]\S*', tweet.text)
-                mentioned_names += [n[1:] for n in namesInTweet]
+                mentioned_names += [n[1:].trim() for n in namesInTweet]
                 mentioned_names.append(tweet.screenname)
 
             mentioned_names = set(mentioned_names) - self.db.get_profiles()
+            mentioned_names.remove("")
+            mentioned_names.remove(" ")
+            mentioned_names.remove(None)
 
-            tasks = create_profile_tasks(mentioned_names)
-            url_arr = task["query_param"]["url"].split(" ")
-            task["query_param"]["cookies"] = None
-
-            for name in mentioned_names:
-                if url_arr[1].find("from:") == -1:
-                    url_arr.insert(1, "from:" + name)
-                else:
-                    url_arr[1] = "from:" + name
-                task["query_param"]["url"] = " ".join(url_arr)
-                tasks.append(
-                    create_task(
-                        query=task["query_param"],
-                        saveParam=task["save_param"],
-                        type='tweets',
-                        recursion=task['recursion'] - 1))
+            tasks = create_tasks([
+                {
+                    "screen_name": list(mentioned_names),
+                    "since": "2007-01-01",
+                    "recursion": task['recursion'] - 1
+                }
+            ], task["save_param"])
 
             for task in tasks:
                 self.queue.put(task)
