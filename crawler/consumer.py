@@ -39,7 +39,7 @@ class Worker:
             for tweet in tweets:
                 namesInTweet = re.findall(r'(?<=\W)[@]\S*', tweet.text)
                 mentioned_names = mentioned_names | \
-                    set([n[1:].trim() for n in namesInTweet])
+                    set([n[1:] for n in namesInTweet])
                 mentioned_names = mentioned_names | set([list(d.items())[0][1]
                                                          for d in tweet.likes_users])
                 mentioned_names = mentioned_names | set([list(d.items())[0][1]
