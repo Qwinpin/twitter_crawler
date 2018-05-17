@@ -35,16 +35,17 @@ class Worker:
 
     def recursion(self, tweets, task):
         if task['recursion'] > 0:
-            mentioned_names = []
+            mentioned_names = set()
             for tweet in tweets:
                 namesInTweet = re.findall(r'(?<=\W)[@]\S*', tweet.text)
                 mentioned_names += [n[1:].trim() for n in namesInTweet]
-                mentioned_names.append(tweet.screenname)
+                mentioned_names += [list(d.items())[0][1]
+                                    for d in tweet.likes_users]
+                mentioned_names += [list(d.items())[0][1]
+                                    for d in tweet.retweet_users]
 
-            mentioned_names = set(mentioned_names) - self.db.get_profiles()
-            mentioned_names.remove("")
-            mentioned_names.remove(" ")
-            mentioned_names.remove(None)
+            mentioned_names = mentioned_names - \
+                self.db.get_profiles() - {"", " ", None}
 
             tasks = create_tasks([
                 {
